@@ -33,7 +33,7 @@ module.exports.botchat = function (parent) {
 
                     const btn = document.createElement('a');
                     btn.id = 'botchat-float-button';
-                    btn.href = '/?viewmode=42';
+                    btn.href = '#';
                     btn.title = 'BotChat';
 
                     btn.style.position = 'fixed';
@@ -58,6 +58,17 @@ module.exports.botchat = function (parent) {
                     btn.innerHTML =
                         '<div style="font-size:26px; line-height:1;">💬</div>' +
                         '<div style="font-size:12px; margin-top:6px;">BotChat</div>';
+
+                    btn.onclick = function (e) {
+                        try {
+                            if (typeof goPlugin === 'function') {
+                                e.preventDefault();
+                                return goPlugin('botchat', 'BotChat');
+                            }
+                        } catch (err) {
+                            console.error('goPlugin error:', err);
+                        }
+                    };
 
                     btn.onmouseenter = function () {
                         btn.style.background = '#1260ad';
@@ -87,7 +98,7 @@ module.exports.botchat = function (parent) {
 
                     const btn = document.createElement('a');
                     btn.id = 'botchat-float-button';
-                    btn.href = '/?viewmode=42';
+                    btn.href = '#';
                     btn.title = 'BotChat';
 
                     btn.style.position = 'fixed';
@@ -112,6 +123,17 @@ module.exports.botchat = function (parent) {
                     btn.innerHTML =
                         '<div style="font-size:26px; line-height:1;">💬</div>' +
                         '<div style="font-size:12px; margin-top:6px;">BotChat</div>';
+
+                    btn.onclick = function (e) {
+                        try {
+                            if (typeof goPlugin === 'function') {
+                                e.preventDefault();
+                                return goPlugin('botchat', 'BotChat');
+                            }
+                        } catch (err) {
+                            console.error('goPlugin error:', err);
+                        }
+                    };
 
                     btn.onmouseenter = function () {
                         btn.style.background = '#1260ad';
