@@ -1,137 +1,44 @@
-"use strict";
-
-const path = require('path');
-
-module.exports.botchat = function (parent) {
-    var obj = {};
-    obj.parent = parent;
-    obj.meshServer = parent.parent;
-    obj.exports = ['onWebUIStartupEnd', 'goPageEnd'];
-    obj.VIEWS = path.join(__dirname, 'views');
-
-    obj.server_startup = function () {
-        console.log('=== BOTCHAT server_startup ===');
-    };
-
-    obj.hook_setupHttpHandlers = function () {
-        const app = obj.parent.webserver.app;
-
-        app.get('/plugins/botchat', function (req, res) {
-            res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
-        });
-    };
-
-    obj.handleAdminReq = function (req, res, user) {
-        res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
-    };
-
-    obj.onWebUIStartupEnd = function () {
-        if (!window.botchatAddButton) {
-            window.botchatAddButton = function () {
-                try {
-                    if (document.getElementById('botchat-float-button')) return;
-
-                    const btn = document.createElement('a');
-                    btn.id = 'botchat-float-button';
-                    btn.href = '/plugins/botchat';
-                    btn.title = 'BotChat';
-
-                    btn.style.position = 'fixed';
-                    btn.style.left = '8px';
-                    btn.style.bottom = '110px';
-                    btn.style.width = '74px';
-                    btn.style.height = '74px';
-                    btn.style.background = '#0b4a88';
-                    btn.style.border = '2px solid rgba(255,255,255,0.18)';
-                    btn.style.borderRadius = '8px';
-                    btn.style.boxSizing = 'border-box';
-                    btn.style.display = 'flex';
-                    btn.style.flexDirection = 'column';
-                    btn.style.alignItems = 'center';
-                    btn.style.justifyContent = 'center';
-                    btn.style.textDecoration = 'none';
-                    btn.style.color = '#fff';
-                    btn.style.zIndex = '99999';
-                    btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.25)';
-                    btn.style.fontFamily = 'Arial, sans-serif';
-
-                    btn.innerHTML =
-                        '<div style="font-size:26px; line-height:1;">💬</div>' +
-                        '<div style="font-size:12px; margin-top:6px;">BotChat</div>';
-
-                    btn.onmouseenter = function () {
-                        btn.style.background = '#1260ad';
-                    };
-
-                    btn.onmouseleave = function () {
-                        btn.style.background = '#0b4a88';
-                    };
-
-                    document.body.appendChild(btn);
-                } catch (e) {
-                    console.error('BotChat button error:', e);
-                }
-            };
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8">
+    <title>BotChat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f5f5;
+            color: #222;
         }
-
-        setTimeout(function () {
-            window.botchatAddButton();
-        }, 300);
-    };
-
-    obj.goPageEnd = function () {
-        if (!window.botchatAddButton) {
-            window.botchatAddButton = function () {
-                try {
-                    if (document.getElementById('botchat-float-button')) return;
-
-                    const btn = document.createElement('a');
-                    btn.id = 'botchat-float-button';
-                    btn.href = '/plugins/botchat';
-                    btn.title = 'BotChat';
-
-                    btn.style.position = 'fixed';
-                    btn.style.left = '8px';
-                    btn.style.bottom = '110px';
-                    btn.style.width = '74px';
-                    btn.style.height = '74px';
-                    btn.style.background = '#0b4a88';
-                    btn.style.border = '2px solid rgba(255,255,255,0.18)';
-                    btn.style.borderRadius = '8px';
-                    btn.style.boxSizing = 'border-box';
-                    btn.style.display = 'flex';
-                    btn.style.flexDirection = 'column';
-                    btn.style.alignItems = 'center';
-                    btn.style.justifyContent = 'center';
-                    btn.style.textDecoration = 'none';
-                    btn.style.color = '#fff';
-                    btn.style.zIndex = '99999';
-                    btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.25)';
-                    btn.style.fontFamily = 'Arial, sans-serif';
-
-                    btn.innerHTML =
-                        '<div style="font-size:26px; line-height:1;">💬</div>' +
-                        '<div style="font-size:12px; margin-top:6px;">BotChat</div>';
-
-                    btn.onmouseenter = function () {
-                        btn.style.background = '#1260ad';
-                    };
-
-                    btn.onmouseleave = function () {
-                        btn.style.background = '#0b4a88';
-                    };
-
-                    document.body.appendChild(btn);
-                } catch (e) {
-                    console.error('BotChat button error:', e);
-                }
-            };
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            max-width: 700px;
         }
+        .btn {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #999;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>BotChat</h1>
+        <p>Test zařízení: <strong>RPi1</strong></p>
+        <button class="btn" onclick="openDesktop()">Open desktop in new tab</button>
+    </div>
 
-        setTimeout(function () {
-            window.botchatAddButton();
-        }, 300);
-    };
-
-    return obj;
-};
+    <script>
+        function openDesktop() {
+            const nodeId = 'csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7';
+            window.location.href = '/login?viewmode=11&hide=31&gotonode=csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7';
+        }
+    </script>
+</body>
+</html>
