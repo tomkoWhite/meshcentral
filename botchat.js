@@ -14,12 +14,14 @@ module.exports.botchat = function (parent) {
         console.log('=== BOTCHAT server_startup ===');
     };
 
-    obj.hook_setupHttpHandlers = function (app) {
+    obj.hook_setupHttpHandlers = function () {
 
+        const app = obj.parent.webserver.app;
+    
         registerApi(app);
-
+    
         app.get('/botchat/test', function (req, res) {
-            res.json({ ok: true, test: 'botchat route works' });
+            res.json({ ok: true });
         });
     
         app.get('/?viewmode=42', function (req, res) {
