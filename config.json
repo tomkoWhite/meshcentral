@@ -1,9 +1,18 @@
 {
   "name": "BotChat",
   "shortName": "botchat",
-  "version": "0.0.1",
-  "author": "BotChat",
+  "version": "0.0.20",
+  "author": "TomKo",
   "description": "BotChat page for MeshCentral",
   "hasAdminPanel": true,
+  "homepage": "https://github.com/tomkoWhite/meshcentral",
+  "changelogUrl": "https://raw.githubusercontent.com/ryanblenis/MeshCentral-ScriptTask/master/changelog.md",
+  "configUrl": "https://raw.githubusercontent.com/tomkoWhite/meshcentral/refs/heads/main/config.json",
+  "downloadUrl": "https://github.com/tomkoWhite/meshcentral/archive/refs/heads/main.zip",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomkoWhite/meshcentral.git"
+  },
+  "versionHistoryUrl": "https://api.github.com/repos/ryanblenis/MeshCentral-ScriptTask/tags",
   "meshCentralCompat": ">=1.1.35"
 }
