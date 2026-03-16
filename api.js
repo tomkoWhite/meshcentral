@@ -2,8 +2,7 @@
 
 const db = require('./db');
 
-module.exports = function registerApi(app, expressInstance) {
-    app.use(expressInstance.json());
+module.exports = function registerApi(app) {
 
     app.get('/botchat/notifications', function (req, res) {
         try {
