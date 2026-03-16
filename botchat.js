@@ -16,7 +16,7 @@ module.exports.botchat = function (parent) {
     obj.hook_setupHttpHandlers = function () {
         const app = obj.parent.webserver.app;
 
-        app.get('/plugins/botchat', function (req, res) {
+        app.get('/?viewmode=43', function (req, res) {
             res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
         });
     };
@@ -38,7 +38,7 @@ module.exports.botchat = function (parent) {
 
                     btn.style.position = 'fixed';
                     btn.style.left = '8px';
-                    btn.style.bottom = '90px';
+                    btn.style.bottom = '230px';
                     btn.style.width = '74px';
                     btn.style.height = '74px';
                     btn.style.background = '#0b4a88';
@@ -92,7 +92,7 @@ module.exports.botchat = function (parent) {
 
                     btn.style.position = 'fixed';
                     btn.style.left = '8px';
-                    btn.style.bottom = '90px';
+                    btn.style.bottom = '230px';
                     btn.style.width = '74px';
                     btn.style.height = '74px';
                     btn.style.background = '#0b4a88';
