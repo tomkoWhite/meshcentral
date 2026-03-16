@@ -45,15 +45,12 @@ function addNotification(data) {
 }
 
 function getActiveNotifications() {
-    const now = Date.now();
-    const stmt = db.prepare(`
+    return db.prepare(`
         SELECT id, node_id, device_name, title, message, created_at, expires_at, status
         FROM notifications
         WHERE status = 'active'
         ORDER BY created_at DESC
-    `);
-
-    return stmt.all().filter(n => n.expires_at > now);
+    `).all();
 }
 
 module.exports = {
