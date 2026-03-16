@@ -61,9 +61,9 @@ module.exports.botchat = function (parent) {
     
         app.post('/botchat/notify', function (req, res) {
             try {
-                let body = req.body;
-        
-                if (!body || typeof body !== 'object') {
+                let body = (req.body && Object.keys(req.body).length) ? req.body : req.query;
+
+                if (!body || typeof body !== 'object' || !Object.keys(body).length) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_json'
