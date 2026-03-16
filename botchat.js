@@ -14,8 +14,19 @@ module.exports.botchat = function (parent) {
         console.log('=== BOTCHAT server_startup ===');
     };
 
-    obj.hook_setupHttpHandlers = function (app) {
+    obj.hook_setupHttpHandlers = function (args) {
 
+        const app =
+            (args && typeof args.get === 'function') ? args :
+            (args && args.app && typeof args.app.get === 'function') ? args.app :
+            (obj.parent && obj.parent.webserver && obj.parent.webserver.app && typeof obj.parent.webserver.app.get === 'function') ? obj.parent.webserver.app :
+            null;
+    
+        if (!app) {
+            console.error('BOTCHAT: Express app not found in hook_setupHttpHandlers');
+            return;
+        }
+    
         app.get('/botchat/test', function (req, res) {
             res.json({ ok: true, test: 'botchat route works' });
         });
