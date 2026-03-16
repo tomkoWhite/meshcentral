@@ -27,7 +27,7 @@ module.exports.botchat = function (parent) {
             return;
         }
 
-        app.use(obj.parent.express.json());
+        //app.use(obj.parent.express.json());
     
         app.get('/botchat/test', function (req, res) {
             res.json({ ok: true, test: 'botchat route works' });
