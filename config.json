@@ -1,7 +1,7 @@
 {
   "name": "BotChat",
   "shortName": "botchat",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "author": "TomKo",
   "description": "BotChat page for MeshCentral",
   "hasAdminPanel": true,
