@@ -1,6 +1,7 @@
 "use strict";
 
 const path = require('path');
+const registerApi = require('./api');
 
 module.exports.botchat = function (parent) {
     var obj = {};
