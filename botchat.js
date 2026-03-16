@@ -14,28 +14,37 @@ module.exports.botchat = function (parent) {
         console.log('=== BOTCHAT server_startup ===');
     };
 
-    obj.hook_setupHttpHandlers = function (args) {
-
-        const app =
-            (args && typeof args.get === 'function') ? args :
-            (args && args.app && typeof args.app.get === 'function') ? args.app :
-            (obj.parent && obj.parent.webserver && obj.parent.webserver.app && typeof obj.parent.webserver.app.get === 'function') ? obj.parent.webserver.app :
-            null;
+    app.get('/botchat/test', function (req, res) {
+        res.json({ ok: true, test: 'botchat route works' });
+    });
     
-        if (!app) {
-            console.error('BOTCHAT: Express app not found in hook_setupHttpHandlers');
-            return;
+    app.get('/botchat/notifications', function (req, res) {
+        try {
+            const items = require('./db').getActiveNotifications().map(function (n) {
+                return {
+                    id: n.id,
+                    nodeId: n.node_id,
+                    deviceName: n.device_name,
+                    title: n.title,
+                    message: n.message,
+                    createdAt: n.created_at,
+                    expiresAt: n.expires_at,
+                    status: n.status
+                };
+            });
+    
+            res.json({
+                ok: true,
+                items: items
+            });
+        } catch (e) {
+            console.error('BOTCHAT DB READ ERROR:', e);
+            res.status(500).json({
+                ok: false,
+                error: 'db_read_failed'
+            });
         }
-    
-        app.get('/botchat/test', function (req, res) {
-            res.json({ ok: true, test: 'botchat route works' });
-        });
-    
-        app.get('/?viewmode=42', function (req, res) {
-            res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
-        });
-    
-    };
+    });
 
     obj.handleAdminReq = function (req, res, user) {
         res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
