@@ -26,6 +26,8 @@ module.exports.botchat = function (parent) {
             console.error('BOTCHAT: Express app not found in hook_setupHttpHandlers');
             return;
         }
+
+        app.use(obj.parent.express.json());
     
         app.get('/botchat/test', function (req, res) {
             res.json({ ok: true, test: 'botchat route works' });
