@@ -39,6 +39,57 @@
             const nodeId = 'csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7';
             window.location.href = '/login?viewmode=11&hide=31&gotonode=csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7';
         }
+        // Tuhle funkci volá plugin z MeshCentral UI hooků
+        window.botchatAddSidebarButton = function () {
+            if (document.getElementById('botchat-side-button')) return;
+    
+            // Zkusíme najít levý sidebar
+            const sidebars = Array.from(document.querySelectorAll('body *')).filter(el => {
+                const style = window.getComputedStyle(el);
+                return style.position !== 'static' && el.offsetWidth > 40 && el.offsetHeight > 250;
+            });
+    
+            // vezmeme nejlevější vysoký panel
+            let sidebar = null;
+            let bestLeft = Infinity;
+            for (const el of sidebars) {
+                const r = el.getBoundingClientRect();
+                if (r.left < 80 && r.height > 300 && r.width < 120) {
+                    if (r.left < bestLeft) {
+                        bestLeft = r.left;
+                        sidebar = el;
+                    }
+                }
+            }
+    
+            if (!sidebar) return;
+    
+            const btn = document.createElement('div');
+            btn.id = 'botchat-side-button';
+            btn.title = 'BotChat';
+            btn.style.width = '64px';
+            btn.style.height = '64px';
+            btn.style.margin = '10px auto';
+            btn.style.borderRadius = '6px';
+            btn.style.background = '#0b4a88';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.style.cursor = 'pointer';
+            btn.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.15)';
+            btn.innerHTML = `
+                <div style="text-align:center; color:white; font-family:Arial,sans-serif; font-size:12px; line-height:1.1;">
+                    <div style="font-size:24px; margin-bottom:4px;">💬</div>
+                    <div>BotChat</div>
+                </div>
+            `;
+    
+            btn.onclick = function () {
+                window.location.href = '/plugins/botchat';
+            };
+    
+            sidebar.appendChild(btn);
+        };
     </script>
 </body>
 </html>
