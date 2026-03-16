@@ -11,33 +11,23 @@
             color: #222;
         }
 
-        h1 {
-            margin-bottom: 20px;
-        }
-
         .card {
             background: white;
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 16px;
-            margin-bottom: 12px;
+            max-width: 700px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        .server {
-            font-weight: bold;
-            margin-bottom: 6px;
-        }
-
-        .timer {
-            color: #b00020;
-            margin-top: 8px;
+        h1 {
+            margin-top: 0;
         }
 
         .btn {
             display: inline-block;
             margin-top: 12px;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-radius: 6px;
             border: 1px solid #999;
             background: #f0f0f0;
@@ -45,23 +35,30 @@
             text-decoration: none;
             color: #111;
         }
+
+        .btn:hover {
+            background: #e8e8e8;
+        }
+
+        .muted {
+            color: #666;
+        }
     </style>
 </head>
 <body>
-    <h1>BotChat</h1>
-
     <div class="card">
-        <div class="server">SRV-APP-01</div>
-        <div>CPU je nad 95 %</div>
-        <div class="timer">Zbývá: 04:32</div>
-        <a class="btn" href="#">Open server</a>
+        <h1>BotChat</h1>
+        <p>Test zařízení: <strong>RPi1</strong></p>
+        <p class="muted">První test otevření zařízení z plugin stránky.</p>
+
+        <button class="btn" onclick="openServer()">Open server</button>
     </div>
 
-    <div class="card">
-        <div class="server">SRV-DB-01</div>
-        <div>Málo místa na disku C:</div>
-        <div class="timer">Zbývá: 11:08</div>
-        <a class="btn" href="#">Open server</a>
-    </div>
+    <script>
+        function openServer() {
+            const nodeId = 'node//csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7';
+            window.location.href = '/?nodeid=' + encodeURIComponent(nodeId);
+        }
+    </script>
 </body>
 </html>
