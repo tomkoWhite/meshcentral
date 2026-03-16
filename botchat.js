@@ -1,5 +1,6 @@
 "use strict";
 
+const db = require('./db');
 const path = require('path');
 
 module.exports.botchat = function (parent) {
@@ -15,8 +16,7 @@ module.exports.botchat = function (parent) {
 
     obj.hook_setupHttpHandlers = function () {
         const app = obj.parent.webserver.app;
-
-        const db = require('./db');
+        
         const express = require('express');
         
         app.use(express.json());
