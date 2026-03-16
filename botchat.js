@@ -59,29 +59,46 @@ module.exports.botchat = function (parent) {
             }
         });
     
-        app.get('/botchat/addtest', function (req, res) {
+        app.post('/botchat/notify', function (req, res) {
             try {
-                const db = require('./db');
+                let body = req.body;
+        
+                if (!body || typeof body !== 'object') {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'invalid_json'
+                    });
+                }
+        
+                if (!body.nodeId || !body.deviceName || !body.title || !body.message) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'missing_fields',
+                        required: ['nodeId', 'deviceName', 'title', 'message']
+                    });
+                }
+        
                 const now = Date.now();
-    
-                const id = db.addNotification({
-                    nodeId: 'csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7',
-                    deviceName: 'RPi1',
-                    title: 'Test notifikace',
-                    message: 'Tohle je testovací notifikace z BotChat pluginu.',
+                const durationSeconds = Number(body.duration || body.ttlSeconds || 300);
+        
+                const id = require('./db').addNotification({
+                    nodeId: body.nodeId,
+                    deviceName: body.deviceName,
+                    title: body.title,
+                    message: body.message,
                     createdAt: now,
-                    expiresAt: now + (5 * 60 * 1000)
+                    expiresAt: now + (durationSeconds * 1000)
                 });
-    
+        
                 res.json({
                     ok: true,
                     id: id
                 });
             } catch (e) {
-                console.error('BOTCHAT ADDTEST ERROR:', e);
+                console.error('BOTCHAT NOTIFY ERROR:', e);
                 res.status(500).json({
                     ok: false,
-                    error: 'addtest_failed'
+                    error: 'notify_failed'
                 });
             }
         });
