@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8">
+    <title>BotChat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        .wrap {
+            max-width: 1000px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .device {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .msg-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+        }
+
+        .timer {
+            font-weight: bold;
+            color: #b00020;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #999;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+
+        .empty {
+            color: #666;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="title">BotChat</div>
+        <div id="notifications"></div>
+    </div>
+
+    <script>
+        let botchatItems = [];
+
+        function formatRemaining(ms) {
+            if (ms <= 0) return 'Vypršelo';
+
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            if (hours > 0) {
+                return (
+                    String(hours).padStart(2, '0') + ':' +
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0')
+                );
+            }
+
+            return (
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0')
+            );
+        }
+
+        function openDesktop(nodeId) {
+            window.location.href =
+                '/login?viewmode=11&hide=31&nobotchat=1&gotonode=' + encodeURIComponent(nodeId);
+        }
+
+        function renderNotifications() {
+            const root = document.getElementById('notifications');
+            root.innerHTML = '';
+
+            if (!botchatItems.length) {
+                root.innerHTML = '<div class="empty">Žádné aktivní notifikace.</div>';
+                return;
+            }
+
+            botchatItems.forEach(function (item) {
+                const now = Date.now();
+                const remaining = item.expiresAt - now;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                card.innerHTML =
+                    '<div class="device">' + escapeHtml(item.deviceName) + '</div>' +
+                    '<div class="msg-title">' + escapeHtml(item.title) + '</div>' +
+                    '<div class="message">' + escapeHtml(item.message) + '</div>' +
+                    '<div class="timer">Zbývá: ' + formatRemaining(remaining) + '</div>' +
+                    '<button class="btn">Open desktop</button>';
+
+                card.querySelector('button').onclick = function () {
+                    openDesktop(item.nodeId);
+                };
+
+                root.appendChild(card);
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        async function loadNotifications() {
+            try {
+                const res = await fetch('/botchat/notifications');
+                const data = await res.json();
+
+                if (data.ok) {
+                    botchatItems = data.items || [];
+                    renderNotifications();
+                }
+            } catch (e) {
+                console.error('loadNotifications error:', e);
+            }
+        }
+
+        setInterval(function () {
+            renderNotifications();
+        }, 1000);
+
+        setInterval(function () {
+            loadNotifications();
+        }, 5000);
+
+        loadNotifications();
+    </script>
+</body>
+</html>
