@@ -119,6 +119,10 @@
             const root = document.getElementById('notifications');
             root.innerHTML = '';
 
+            botchatItems.sort(function(a, b) {
+                return a.expiresAt - b.expiresAt;
+            });
+
             if (!botchatItems.length) {
                 root.innerHTML = '<div class="empty">Žádné aktivní notifikace.</div>';
                 return;
