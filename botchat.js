@@ -1,7 +1,7 @@
 "use strict";
 
 const path = require('path');
-const registerApi = require('./api');
+//const registerApi = require('./api');
 
 module.exports.botchat = function (parent) {
     var obj = {};
@@ -14,14 +14,10 @@ module.exports.botchat = function (parent) {
         console.log('=== BOTCHAT server_startup ===');
     };
 
-    obj.hook_setupHttpHandlers = function () {
+    obj.hook_setupHttpHandlers = function (app) {
 
-        const app = obj.parent.webserver.app;
-    
-        registerApi(app);
-    
         app.get('/botchat/test', function (req, res) {
-            res.json({ ok: true });
+            res.json({ ok: true, test: 'botchat route works' });
         });
     
         app.get('/?viewmode=42', function (req, res) {
