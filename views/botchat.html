@@ -10,7 +10,6 @@
             background: #f5f5f5;
             color: #222;
         }
-
         .card {
             background: white;
             border: 1px solid #ddd;
@@ -19,11 +18,6 @@
             max-width: 700px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-
-        h1 {
-            margin-top: 0;
-        }
-
         .btn {
             display: inline-block;
             margin-top: 12px;
@@ -32,16 +26,6 @@
             border: 1px solid #999;
             background: #f0f0f0;
             cursor: pointer;
-            text-decoration: none;
-            color: #111;
-        }
-
-        .btn:hover {
-            background: #e8e8e8;
-        }
-
-        .muted {
-            color: #666;
         }
     </style>
 </head>
@@ -49,15 +33,13 @@
     <div class="card">
         <h1>BotChat</h1>
         <p>Test zařízení: <strong>RPi1</strong></p>
-        <p class="muted">První test otevření zařízení z plugin stránky.</p>
-
         <button class="btn" onclick="openServer()">Open server</button>
     </div>
 
     <script>
         function openServer() {
             const nodeId = 'node//csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7';
-            window.location.href = '/?nodeid=' + encodeURIComponent(nodeId);
+            window.location.href = '/?gotonode=' + encodeURIComponent(nodeId) + '&viewmode=10';
         }
     </script>
 </body>
