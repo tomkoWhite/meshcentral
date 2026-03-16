@@ -14,15 +14,14 @@ module.exports.botchat = function (parent) {
         console.log('=== BOTCHAT server_startup ===');
     };
 
-    obj.hook_setupHttpHandlers = function (args) {
-        console.log('=== BOTCHAT hook_setupHttpHandlers args ===');
-        console.log(args);
-        console.log('TYPEOF args:', typeof args);
+    obj.hook_setupHttpHandlers = function (app) {
+
+        registerApi(app);
     
-        if (args) {
-            try { console.log('KEYS:', Object.keys(args)); } catch (e) {}
-            try { console.log('args.app:', args.app); } catch (e) {}
-        }
+        app.get('/?viewmode=42', function (req, res) {
+            res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
+        });
+    
     };
 
     obj.handleAdminReq = function (req, res, user) {
