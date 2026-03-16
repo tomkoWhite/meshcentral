@@ -140,11 +140,14 @@
                 card.className = 'card';
 
                 card.innerHTML =
-                    '<div class="device">' + escapeHtml(item.deviceName) + '</div>' +
-                    '<div class="msg-title">' + escapeHtml(item.title) + '</div>' +
-                    '<div class="message">' + escapeHtml(item.message) + '</div>' +
-                    '<div class="timer">Zbývá: ' + formatRemaining(remaining) + '</div>' +
-                    '<button class="btn">Open desktop</button>';
+                    '<div class="card-top">' +
+                        '<div class="device">🖥 ' + escapeHtml(item.deviceName) + '</div>' +
+                        '<div style="display:flex;align-items:center;gap:12px;">' +
+                            '<div class="timer">⏱ ' + formatRemaining(remaining) + '</div>' +
+                            '<button class="btn">Connect</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="message">' + escapeHtml(item.message) + '</div>';
 
                 card.querySelector('button').onclick = function () {
                     openDesktop(item.nodeId);
