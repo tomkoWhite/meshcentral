@@ -50,37 +50,38 @@ module.exports.botchat = function (parent) {
                     ok: true,
                     items: items
                 });
-            app.get('/botchat/addtest', function (req, res) {
-                try {
-                    const db = require('./db');
-                    const now = Date.now();
-            
-                    const id = db.addNotification({
-                        nodeId: 'csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7',
-                        deviceName: 'RPi1',
-                        title: 'Test notifikace',
-                        message: 'Tohle je testovací notifikace z BotChat pluginu.',
-                        createdAt: now,
-                        expiresAt: now + (5 * 60 * 1000)
-                    });
-            
-                    res.json({
-                        ok: true,
-                        id: id
-                    });
-                } catch (e) {
-                    console.error('BOTCHAT ADDTEST ERROR:', e);
-                    res.status(500).json({
-                        ok: false,
-                        error: 'addtest_failed'
-                    });
-                }
-            });
             } catch (e) {
                 console.error('BOTCHAT DB READ ERROR:', e);
                 res.status(500).json({
                     ok: false,
                     error: 'db_read_failed'
+                });
+            }
+        });
+    
+        app.get('/botchat/addtest', function (req, res) {
+            try {
+                const db = require('./db');
+                const now = Date.now();
+    
+                const id = db.addNotification({
+                    nodeId: 'csVl9zfywTPBJsG5B9L297VAhmnCcYxUdUHF31Esi@cLyXUU4ksEkt1T0sx1ozL7',
+                    deviceName: 'RPi1',
+                    title: 'Test notifikace',
+                    message: 'Tohle je testovací notifikace z BotChat pluginu.',
+                    createdAt: now,
+                    expiresAt: now + (5 * 60 * 1000)
+                });
+    
+                res.json({
+                    ok: true,
+                    id: id
+                });
+            } catch (e) {
+                console.error('BOTCHAT ADDTEST ERROR:', e);
+                res.status(500).json({
+                    ok: false,
+                    error: 'addtest_failed'
                 });
             }
         });
