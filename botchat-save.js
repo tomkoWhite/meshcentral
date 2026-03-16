@@ -29,6 +29,7 @@ module.exports.botchat = function (parent) {
         if (!window.botchatAddButton) {
             window.botchatAddButton = function () {
                 try {
+                    if (window.location.search.indexOf('nobotchat=1') >= 0) return;
                     if (document.getElementById('botchat-float-button')) return;
 
                     const btn = document.createElement('a');
@@ -103,11 +104,11 @@ module.exports.botchat = function (parent) {
 
                     btn.style.position = 'fixed';
                     btn.style.left = '8px';
-                    btn.style.bottom = '230px';
+                    btn.style.bottom = '-230px';
                     btn.style.width = '0px';
                     btn.style.height = '0px';
                     btn.style.background = '#0b4a88';
-                    btn.style.border = '2px solid rgba(255,255,255,0.18)';
+                    btn.style.border = '2px solid rgba(255,0,0,0.18)';
                     btn.style.borderRadius = '8px';
                     btn.style.boxSizing = 'border-box';
                     btn.style.display = 'flex';
