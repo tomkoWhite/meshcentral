@@ -1,10 +1,9 @@
 "use strict";
 
-const express = require('express');
 const db = require('./db');
 
-module.exports = function registerApi(app) {
-    app.use(express.json());
+module.exports = function registerApi(app, expressInstance) {
+    app.use(expressInstance.json());
 
     app.get('/botchat/notifications', function (req, res) {
         try {
