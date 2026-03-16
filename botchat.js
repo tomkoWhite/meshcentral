@@ -16,7 +16,7 @@ module.exports.botchat = function (parent) {
 
     obj.hook_setupHttpHandlers = function (app) {
 
-        registerApi(app, obj.parent.express);
+        registerApi(app);
     
         app.get('/?viewmode=42', function (req, res) {
             res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
