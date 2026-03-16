@@ -97,7 +97,8 @@
         }
 
         function openDesktop(nodeId) {
-            window.location.href = '/login?viewmode=11&hide=31&nobotchat=1&gotonode=' + nodeId;
+            window.location.href =
+                '/login?viewmode=11&hide=31&nobotchat=1&gotonode=' + encodeURIComponent(nodeId);
         }
 
         function renderNotifications() {
