@@ -32,41 +32,4 @@ module.exports = function registerApi(app) {
         }
     });
 
-    app.post('/botchat/notify', function (req, res) {
-        try {
-            const body = req.body || {};
-
-            if (!body.nodeId || !body.deviceName || !body.title || !body.message) {
-                return res.status(400).json({
-                    ok: false,
-                    error: 'missing_fields'
-                });
-            }
-
-            const createdAt = Date.now();
-            const expiresAt = body.expiresAt
-                ? Number(body.expiresAt)
-                : createdAt + ((Number(body.ttlSeconds) || 300) * 1000);
-
-            const id = db.addNotification({
-                nodeId: body.nodeId,
-                deviceName: body.deviceName,
-                title: body.title,
-                message: body.message,
-                createdAt: createdAt,
-                expiresAt: expiresAt
-            });
-
-            res.json({
-                ok: true,
-                id: id
-            });
-        } catch (e) {
-            console.error('BOTCHAT DB WRITE ERROR:', e);
-            res.status(500).json({
-                ok: false,
-                error: 'db_write_failed'
-            });
-        }
-    });
 };
