@@ -29,6 +29,7 @@ module.exports.botchat = function (parent) {
         if (!window.botchatAddButton) {
             window.botchatAddButton = function () {
                 try {
+                    if (window.location.search.indexOf('nobotchat=1') >= 0) return;
                     if (document.getElementById('botchat-float-button')) return;
 
                     const btn = document.createElement('a');
