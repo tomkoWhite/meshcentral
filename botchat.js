@@ -65,7 +65,10 @@ module.exports.botchat = function (parent) {
     
         app.post('/botchat/notify', function (req, res) {
 
-            const key = req.query.key || (req.body && req.body.key);
+            const key =
+                req.headers['x-api-key'] ||
+                req.query.key ||
+                body.key;
 
             if (key !== BOTCHAT_API_KEY) {
                 return res.status(403).json({
