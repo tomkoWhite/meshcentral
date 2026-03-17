@@ -96,6 +96,27 @@
         let knownIds = new Set();
         let notificationsInitialized = false;
 
+        let titleBlinkInterval = null;
+        const normalTitle = 'BotChat';
+        
+        function startTitleBlink(count) {
+            if (titleBlinkInterval) return;
+        
+            let on = false;
+            titleBlinkInterval = setInterval(function () {
+                document.title = on ? normalTitle : '(' + count + ') Nová notifikace!';
+                on = !on;
+            }, 1000);
+        }
+        
+        function stopTitleBlink() {
+            if (titleBlinkInterval) {
+                clearInterval(titleBlinkInterval);
+                titleBlinkInterval = null;
+            }
+            document.title = normalTitle;
+        }
+
         function playNotificationSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -225,6 +246,7 @@
                 
                     if (newItems.length > 0) {
                         playNotificationSound();
+                        startTitleBlink(newItems.length);
                     }
                 }
             } catch (e) {
