@@ -96,17 +96,30 @@
         let notificationsInitialized = false;
 
         async function showBrowserNotification(item) {
-            if (!('Notification' in window)) return;
+            alert('showBrowserNotification called');
         
-            if (Notification.permission === 'default') {
-                await Notification.requestPermission();
+            if (!('Notification' in window)) {
+                alert('Notification API not supported');
+                return;
             }
         
-            if (Notification.permission !== 'granted') return;
+            alert('permission before: ' + Notification.permission);
+        
+            if (Notification.permission === 'default') {
+                const result = await Notification.requestPermission();
+                alert('permission request result: ' + result);
+            }
+        
+            if (Notification.permission !== 'granted') {
+                alert('permission not granted');
+                return;
+            }
         
             const n = new Notification(item.title || 'BotChat', {
                 body: item.deviceName + ' — ' + item.message
             });
+        
+            alert('notification created');
         
             n.onclick = function () {
                 window.focus();
