@@ -63,15 +63,16 @@ module.exports.botchat = function (parent) {
         });
     
         app.post('/botchat/notify', function (req, res) {
-            try {
-                const key = req.query.key || (req.body && req.body.key);
 
-                if (key !== BOTCHAT_API_KEY) {
-                    return res.status(403).json({
-                        ok: false,
-                        error: 'unauthorized'
-                    });
-                }
+            const key = req.query.key || (req.body && req.body.key);
+
+            if (key !== BOTCHAT_API_KEY) {
+                return res.status(403).json({
+                    ok: false,
+                    error: 'unauthorized'
+                });
+            }
+            try {
                 
                 let body = (req.body && Object.keys(req.body).length) ? req.body : req.query;
 
