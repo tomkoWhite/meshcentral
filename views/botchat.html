@@ -95,6 +95,25 @@
         let knownIds = new Set();
         let notificationsInitialized = false;
 
+        async function showBrowserNotification(item) {
+            if (!('Notification' in window)) return;
+
+            if (Notification.permission === 'default') {
+                await Notification.requestPermission();
+            }
+
+            if (Notification.permission !== 'granted') return;
+
+            const n = new Notification(item.title || 'BotChat', {
+                body: item.deviceName + ' — ' + item.message,
+                tag: 'botchat-' + item.id
+            });
+
+            n.onclick = function () {
+                window.focus();
+            };
+        }
+
         function formatRemaining(ms) {
             if (ms <= 0) return 'Vypršelo';
 
@@ -170,40 +189,42 @@
 
         async function loadNotifications() {
             try {
-                const res = await fetch('/botchat/notifications');
+                const res = await fetch('/botchat/notifications', {
+                    credentials: 'include'
+                });
+
                 const data = await res.json();
 
-                if (data.ok) {
+                if (!data.ok) return;
 
-                    const items = data.items || [];
-                
-                    // první načtení = jen si zapamatuj ID, nic neohlašuj
-                    if (!notificationsInitialized) {
-                        knownIds = new Set(items.map(function(item) {
-                            return item.id;
-                        }));
-                
-                        notificationsInitialized = true;
-                        botchatItems = items;
-                        renderNotifications();
-                        return;
-                    }
-                
-                    const newItems = items.filter(function(item) {
-                        return !knownIds.has(item.id);
-                    });
-                
+                const items = data.items || [];
+
+                if (!notificationsInitialized) {
                     knownIds = new Set(items.map(function(item) {
                         return item.id;
                     }));
-                
+
+                    notificationsInitialized = true;
                     botchatItems = items;
                     renderNotifications();
-                
-                    if (newItems.length > 0) {
-                        alert('NEW NOTIFICATION: ' + newItems[0].title);
-                    }
+                    return;
                 }
+
+                const newItems = items.filter(function(item) {
+                    return !knownIds.has(item.id);
+                });
+
+                knownIds = new Set(items.map(function(item) {
+                    return item.id;
+                }));
+
+                botchatItems = items;
+                renderNotifications();
+
+                if (newItems.length > 0) {
+                    showBrowserNotification(newItems[0]);
+                }
+
             } catch (e) {
                 console.error('loadNotifications error:', e);
             }
