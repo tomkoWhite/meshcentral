@@ -96,28 +96,10 @@
         let knownIds = new Set();
         let notificationsInitialized = false;
 
-        let titleBlinkInterval = null;
-        const normalTitle = 'BotChat';
-        
-        function startTitleBlink(count) {
-            if (titleBlinkInterval) return;
-        
-            let on = false;
-            titleBlinkInterval = setInterval(function () {
-                document.title = on ? normalTitle : '(' + count + ') Nová notifikace!';
-                on = !on;
-            }, 1000);
-        }
-        
-        function stopTitleBlink() {
-            if (titleBlinkInterval) {
-                clearInterval(titleBlinkInterval);
-                titleBlinkInterval = null;
-            }
-            document.title = normalTitle;
-        }
-
         function playNotificationSound() {
+            // 👉 když je stránka viditelná → nepípat
+            if (!document.hidden) return;
+        
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -125,7 +107,7 @@
                 const gain = ctx.createGain();
         
                 oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, ctx.currentTime); // tón
+                oscillator.frequency.setValueAtTime(880, ctx.currentTime);
         
                 gain.gain.setValueAtTime(0.2, ctx.currentTime);
         
@@ -133,7 +115,8 @@
                 gain.connect(ctx.destination);
         
                 oscillator.start();
-                oscillator.stop(ctx.currentTime + 0.15); // délka pípnutí
+                oscillator.stop(ctx.currentTime + 0.35);
+        
             } catch (e) {
                 console.log('audio error', e);
             }
@@ -246,7 +229,6 @@
                 
                     if (newItems.length > 0) {
                         playNotificationSound();
-                        startTitleBlink(newItems.length);
                     }
                 }
             } catch (e) {
