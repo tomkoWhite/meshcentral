@@ -201,44 +201,24 @@
 
         async function loadNotifications() {
             try {
+                alert('loadNotifications start');
+        
                 const res = await fetch('/botchat/notifications', {
                     credentials: 'include'
                 });
+        
+                alert('fetch status: ' + res.status);
+        
                 const data = await res.json();
-
+        
+                alert('items len: ' + ((data.items || []).length));
+        
                 if (data.ok) {
-
-                    const items = data.items || [];
-                
-                    // první načtení = jen si zapamatuj ID, nic neohlašuj
-                    if (!notificationsInitialized) {
-                        knownIds = new Set(items.map(function(item) {
-                            return item.id;
-                        }));
-                
-                        notificationsInitialized = true;
-                        botchatItems = items;
-                        renderNotifications();
-                        return;
-                    }
-                
-                    const newItems = items.filter(function(item) {
-                        return !knownIds.has(item.id);
-                    });
-                
-                    knownIds = new Set(items.map(function(item) {
-                        return item.id;
-                    }));
-                
-                    botchatItems = items;
+                    botchatItems = data.items || [];
                     renderNotifications();
-                
-                    if (newItems.length > 0) {
-                        showBrowserNotification(newItems[0]);
-                    }
                 }
             } catch (e) {
-                console.error('loadNotifications error:', e);
+                alert('FETCH ERROR: ' + e);
             }
         }
 
