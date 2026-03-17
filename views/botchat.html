@@ -96,21 +96,26 @@
         let knownIds = new Set();
         let notificationsInitialized = false;
 
-        function showBrowserNotification(item) {
-            const win = window.top || window;
+        function playNotificationSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
         
-            //if (!('Notification' in win)) return;
+                const oscillator = ctx.createOscillator();
+                const gain = ctx.createGain();
         
-            //if (win.Notification.permission !== 'granted') return;
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, ctx.currentTime); // tón
         
-            const n = new win.Notification('BotChat', {
-                body: 'item.deviceName' + ' — ' + 'item.message',
-                tag: 'botchat-' + 'item.id'
-            });
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
         
-            n.onclick = function () {
-                win.focus();
-            };
+                oscillator.connect(gain);
+                gain.connect(ctx.destination);
+        
+                oscillator.start();
+                oscillator.stop(ctx.currentTime + 0.15); // délka pípnutí
+            } catch (e) {
+                console.log('audio error', e);
+            }
         }
 
         function formatRemaining(ms) {
@@ -219,8 +224,7 @@
                     renderNotifications();
                 
                     if (newItems.length > 0) {
-                        showBrowserNotification(newItems[0]);
-                        showBrowserNotification(newItems[1]);
+                        playNotificationSound();
                     }
                 }
             } catch (e) {
