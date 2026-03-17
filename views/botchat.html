@@ -93,6 +93,7 @@
     <script>
         let botchatItems = [];
         let knownIds = new Set();
+        let notificationsInitialized = false;
 
         function formatRemaining(ms) {
             if (ms <= 0) return 'Vypršelo';
@@ -176,11 +177,21 @@
 
                     const items = data.items || [];
                 
+                    // první načtení = jen si zapamatuj ID, nic neohlašuj
+                    if (!notificationsInitialized) {
+                        knownIds = new Set(items.map(function(item) {
+                            return item.id;
+                        }));
+                
+                        notificationsInitialized = true;
+                        botchatItems = items;
+                        renderNotifications();
+                        return;
+                    }
+                
                     const newItems = items.filter(function(item) {
                         return !knownIds.has(item.id);
                     });
-                
-                    alert('items=' + items.length + ', newItems=' + newItems.length);
                 
                     knownIds = new Set(items.map(function(item) {
                         return item.id;
@@ -190,7 +201,7 @@
                     renderNotifications();
                 
                     if (newItems.length > 0) {
-                        alert('NEW NOTIFICATION');
+                        alert('NEW NOTIFICATION: ' + newItems[0].title);
                     }
                 }
             } catch (e) {
