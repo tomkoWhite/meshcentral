@@ -103,9 +103,9 @@
         
             //if (win.Notification.permission !== 'granted') return;
         
-            const n = new win.Notification(item.title || 'BotChat', {
-                body: item.deviceName + ' — ' + item.message,
-                tag: 'botchat-' + item.id
+            const n = new win.Notification('BotChat', {
+                body: 'item.deviceName' + ' — ' + 'item.message',
+                tag: 'botchat-' + 'item.id'
             });
         
             n.onclick = function () {
