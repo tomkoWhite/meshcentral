@@ -95,6 +95,24 @@
         let knownIds = new Set();
         let notificationsInitialized = false;
 
+        async function showBrowserNotification(item) {
+            if (!('Notification' in window)) return;
+        
+            if (Notification.permission === 'default') {
+                await Notification.requestPermission();
+            }
+        
+            if (Notification.permission !== 'granted') return;
+        
+            const n = new Notification(item.title || 'BotChat', {
+                body: item.deviceName + ' — ' + item.message
+            });
+        
+            n.onclick = function () {
+                window.focus();
+            };
+        }
+
         function formatRemaining(ms) {
             if (ms <= 0) return 'Vypršelo';
 
@@ -201,7 +219,7 @@
                     renderNotifications();
                 
                     if (newItems.length > 0) {
-                        alert('NEW NOTIFICATION: ' + newItems[0].title);
+                        ashowBrowserNotification(newItems[0]);
                     }
                 }
             } catch (e) {
