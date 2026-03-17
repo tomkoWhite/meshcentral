@@ -96,21 +96,23 @@
         let notificationsInitialized = false;
 
         async function showBrowserNotification(item) {
-            if (!('Notification' in window)) return;
-
-            if (Notification.permission === 'default') {
-                await Notification.requestPermission();
+            const win = window.top || window;
+        
+            if (!('Notification' in win)) return;
+        
+            if (win.Notification.permission === 'default') {
+                await win.Notification.requestPermission();
             }
-
-            if (Notification.permission !== 'granted') return;
-
-            const n = new Notification(item.title || 'BotChat', {
+        
+            if (win.Notification.permission !== 'granted') return;
+        
+            const n = new win.Notification(item.title || 'BotChat', {
                 body: item.deviceName + ' — ' + item.message,
                 tag: 'botchat-' + item.id
             });
-
+        
             n.onclick = function () {
-                window.focus();
+                win.focus();
             };
         }
 
