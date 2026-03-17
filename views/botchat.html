@@ -96,7 +96,7 @@
         let knownIds = new Set();
         let notificationsInitialized = false;
 
-        async function showBrowserNotification(item) {
+        function showBrowserNotification(item) {
             const win = window.top || window;
         
             if (!('Notification' in win)) return;
