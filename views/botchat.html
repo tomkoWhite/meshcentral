@@ -201,7 +201,9 @@
 
         async function loadNotifications() {
             try {
-                const res = await fetch('/botchat/notifications');
+                const res = await fetch('/botchat/notifications', {
+                    credentials: 'include'
+                });
                 const data = await res.json();
 
                 if (data.ok) {
