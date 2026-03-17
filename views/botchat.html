@@ -97,19 +97,29 @@
 
         async function showBrowserNotification(item) {
             const win = window.top || window;
+
+            alert('NEW NOTIFICATION: 1');
         
             if (!('Notification' in win)) return;
+
+            alert('NEW NOTIFICATION: 2');
         
             if (win.Notification.permission === 'default') {
                 await win.Notification.requestPermission();
             }
+
+            alert('NEW NOTIFICATION: 3');
         
             if (win.Notification.permission !== 'granted') return;
+
+            alert('NEW NOTIFICATION: 4');
         
             const n = new win.Notification(item.title || 'BotChat', {
                 body: item.deviceName + ' — ' + item.message,
                 tag: 'botchat-' + item.id
             });
+
+            alert('NEW NOTIFICATION: 5');
         
             n.onclick = function () {
                 win.focus();
