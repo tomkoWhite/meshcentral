@@ -91,6 +91,8 @@
     </div>
 
     <script>
+        console.log('BOTCHAT SCRIPT LOADED');
+        alert('BOTCHAT SCRIPT LOADED');
         let botchatItems = [];
         let knownIds = new Set();
 
@@ -168,6 +170,8 @@
         }
 
         async function loadNotifications() {
+            console.log('loadNotifications called');
+            alert('loadNotifications called');
             try {
                 const res = await fetch('/botchat/notifications');
                 const data = await res.json();
