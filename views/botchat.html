@@ -99,13 +99,9 @@
         function showBrowserNotification(item) {
             const win = window.top || window;
         
-            if (!('Notification' in win)) return;
+            //if (!('Notification' in win)) return;
         
-            if (win.Notification.permission === 'default') {
-                await win.Notification.requestPermission();
-            }
-        
-            if (win.Notification.permission !== 'granted') return;
+            //if (win.Notification.permission !== 'granted') return;
         
             const n = new win.Notification(item.title || 'BotChat', {
                 body: item.deviceName + ' — ' + item.message,
