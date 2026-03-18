@@ -92,9 +92,20 @@ function getSchedules() {
     `).all();
 }
 
+function deleteSchedule(id) {
+    const stmt = db.prepare(`
+        DELETE FROM schedules
+        WHERE id = ?
+    `);
+
+    const info = stmt.run(id);
+    return info.changes > 0;
+}
+
 module.exports = {
     addNotification,
     getActiveNotifications,
     addSchedule,
-    getSchedules
+    getSchedules,
+    deleteSchedule
 };
