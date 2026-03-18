@@ -2,7 +2,6 @@
 
 const path = require('path');
 const BOTCHAT_API_KEY = 'NZQGkV2di7NzeB8V6FX98PJENvZkClkpAnP5JuUo5rgcMWudmXmddcUqvD9pU9ei';
-//const registerApi = require('./api');
 
 module.exports.botchat = function (parent) {
     var obj = {};
@@ -22,18 +21,18 @@ module.exports.botchat = function (parent) {
                 console.error('BOTCHAT devices: db.GetAllType not available');
                 return callback([]);
             }
-    
+
             db.GetAllType('node', function (err, docs) {
                 if (err) {
                     console.error('BOTCHAT db.GetAllType(node) error:', err);
                     return callback([]);
                 }
-    
+
                 if (!Array.isArray(docs)) {
                     console.error('BOTCHAT db.GetAllType(node): result is not array');
                     return callback([]);
                 }
-    
+
                 const devices = docs.map(function (n) {
                     return {
                         nodeId: n._id || n.id || '',
@@ -45,7 +44,7 @@ module.exports.botchat = function (parent) {
                 }).sort(function (a, b) {
                     return (a.deviceName || '').localeCompare(b.deviceName || '');
                 });
-    
+
                 callback(devices);
             });
         } catch (ex) {
@@ -53,6 +52,7 @@ module.exports.botchat = function (parent) {
             callback([]);
         }
     }
+
     obj.hook_setupHttpHandlers = function (args) {
 
         const app =
@@ -60,19 +60,19 @@ module.exports.botchat = function (parent) {
             (args && args.app && typeof args.app.get === 'function') ? args.app :
             (obj.parent && obj.parent.webserver && obj.parent.webserver.app && typeof obj.parent.webserver.app.get === 'function') ? obj.parent.webserver.app :
             null;
-    
+
         if (!app) {
             console.error('BOTCHAT: Express app not found in hook_setupHttpHandlers');
             return;
         }
 
-        //app.use(obj.parent.express.json());
-    
+        // app.use(obj.parent.express.json());
+
         app.get('/botchat/test', function (req, res) {
             res.json({ ok: true, test: 'botchat route works' });
         });
 
-        // === DEVICES ENDPOINT ===
+        // === DEVICES ===
         app.get('/botchat/devices', function (req, res) {
             try {
                 getMeshCentralDevices(obj, function (devices) {
@@ -91,37 +91,10 @@ module.exports.botchat = function (parent) {
             }
         });
 
-        app.get('/botchat/inspect', function (req, res) {
-            try {
-                function safeKeys(x) {
-                    if (!x || typeof x !== 'object') return [];
-                    try { return Object.keys(x).slice(0, 200); } catch (e) { return ['<unreadable>']; }
-                }
-        
-                res.json({
-                    ok: true,
-                    parentKeys: safeKeys(obj.parent),
-                    meshServerKeys: safeKeys(obj.meshServer),
-                    parentParentKeys: safeKeys(obj.parent?.parent),
-                    parentDbKeys: safeKeys(obj.parent?.db),
-                    meshServerDbKeys: safeKeys(obj.meshServer?.db),
-                    parentWebserverKeys: safeKeys(obj.parent?.webserver),
-                    meshServerWebserverKeys: safeKeys(obj.meshServer?.webserver)
-                });
-            } catch (ex) {
-                res.status(500).json({
-                    ok: false,
-                    error: 'inspect_failed',
-                    details: String(ex)
-                });
-            }
-        });
-
-        // === DEBUG ENDPOINT ===
         app.get('/botchat/devices/debug', function (req, res) {
             try {
                 const db = obj?.meshServer?.db;
-        
+
                 res.json({
                     ok: true,
                     hasMeshServer: !!obj.meshServer,
@@ -141,13 +114,39 @@ module.exports.botchat = function (parent) {
             }
         });
 
+        app.get('/botchat/inspect', function (req, res) {
+            try {
+                function safeKeys(x) {
+                    if (!x || typeof x !== 'object') return [];
+                    try { return Object.keys(x).slice(0, 200); } catch (e) { return ['<unreadable>']; }
+                }
+
+                res.json({
+                    ok: true,
+                    parentKeys: safeKeys(obj.parent),
+                    meshServerKeys: safeKeys(obj.meshServer),
+                    parentParentKeys: safeKeys(obj.parent?.parent),
+                    parentDbKeys: safeKeys(obj.parent?.db),
+                    meshServerDbKeys: safeKeys(obj.meshServer?.db),
+                    parentWebserverKeys: safeKeys(obj.parent?.webserver),
+                    meshServerWebserverKeys: safeKeys(obj.meshServer?.webserver)
+                });
+            } catch (ex) {
+                res.status(500).json({
+                    ok: false,
+                    error: 'inspect_failed',
+                    details: String(ex)
+                });
+            }
+        });
+
         app.get('/botchat/sessiondebug', function (req, res) {
             try {
                 function safeKeys(x) {
                     if (!x || typeof x !== 'object') return [];
                     try { return Object.keys(x).slice(0, 80); } catch (e) { return ['<unreadable>']; }
                 }
-        
+
                 res.json({
                     ok: true,
                     hasSession: !!req.session,
@@ -167,7 +166,8 @@ module.exports.botchat = function (parent) {
                 });
             }
         });
-    
+
+        // === NOTIFICATIONS ===
         app.get('/botchat/notifications', function (req, res) {
             try {
                 const items = require('./db').getActiveNotifications().map(function (n) {
@@ -182,7 +182,7 @@ module.exports.botchat = function (parent) {
                         status: n.status
                     };
                 });
-    
+
                 res.json({
                     ok: true,
                     items: items
@@ -195,23 +195,22 @@ module.exports.botchat = function (parent) {
                 });
             }
         });
-    
+
         app.post('/botchat/notify', function (req, res) {
-
-            const key =
-                req.headers['x-api-key'] ||
-                req.query.key ||
-                body.key;
-
-            if (key !== BOTCHAT_API_KEY) {
-                return res.status(403).json({
-                    ok: false,
-                    error: 'unauthorized'
-                });
-            }
             try {
-                
                 let body = (req.body && Object.keys(req.body).length) ? req.body : req.query;
+
+                const key =
+                    req.headers['x-api-key'] ||
+                    req.query.key ||
+                    (body ? body.key : null);
+
+                if (key !== BOTCHAT_API_KEY) {
+                    return res.status(403).json({
+                        ok: false,
+                        error: 'unauthorized'
+                    });
+                }
 
                 if (!body || typeof body !== 'object' || !Object.keys(body).length) {
                     return res.status(400).json({
@@ -219,7 +218,7 @@ module.exports.botchat = function (parent) {
                         error: 'invalid_json'
                     });
                 }
-        
+
                 if (!body.nodeId || !body.deviceName || !body.title || !body.message) {
                     return res.status(400).json({
                         ok: false,
@@ -227,10 +226,10 @@ module.exports.botchat = function (parent) {
                         required: ['nodeId', 'deviceName', 'title', 'message']
                     });
                 }
-        
+
                 const now = Date.now();
                 const durationSeconds = Number(body.duration || body.ttlSeconds || 300);
-        
+
                 const id = require('./db').addNotification({
                     nodeId: body.nodeId,
                     deviceName: body.deviceName,
@@ -239,7 +238,7 @@ module.exports.botchat = function (parent) {
                     createdAt: now,
                     expiresAt: now + (durationSeconds * 1000)
                 });
-        
+
                 res.json({
                     ok: true,
                     id: id
@@ -252,11 +251,95 @@ module.exports.botchat = function (parent) {
                 });
             }
         });
-    
+
+        // === SCHEDULES ===
+        app.get('/botchat/schedules', function (req, res) {
+            try {
+                const items = require('./db').getSchedules().map(function (s) {
+                    return {
+                        id: s.id,
+                        nodeId: s.node_id,
+                        deviceName: s.device_name,
+                        startAt: s.start_at,
+                        endAt: s.end_at,
+                        startTriggered: s.start_triggered,
+                        endTriggered: s.end_triggered,
+                        createdAt: s.created_at
+                    };
+                });
+
+                res.json({
+                    ok: true,
+                    items: items
+                });
+            } catch (e) {
+                console.error('SCHEDULE GET ERROR:', e);
+                res.status(500).json({
+                    ok: false,
+                    error: 'schedule_get_failed'
+                });
+            }
+        });
+
+        app.post('/botchat/schedules', function (req, res) {
+            try {
+                let body = (req.body && Object.keys(req.body).length) ? req.body : req.query;
+
+                if (!body || typeof body !== 'object' || !Object.keys(body).length) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'invalid_json'
+                    });
+                }
+
+                if (!body.nodeId || !body.deviceName || !body.startAt || !body.endAt) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'missing_fields',
+                        required: ['nodeId', 'deviceName', 'startAt', 'endAt']
+                    });
+                }
+
+                const startAt = Number(body.startAt);
+                const endAt = Number(body.endAt);
+
+                if (!Number.isFinite(startAt) || !Number.isFinite(endAt)) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'invalid_time'
+                    });
+                }
+
+                if (endAt <= startAt) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'invalid_range'
+                    });
+                }
+
+                const id = require('./db').addSchedule({
+                    nodeId: body.nodeId,
+                    deviceName: body.deviceName,
+                    startAt: startAt,
+                    endAt: endAt
+                });
+
+                res.json({
+                    ok: true,
+                    id: id
+                });
+            } catch (e) {
+                console.error('SCHEDULE ADD ERROR:', e);
+                res.status(500).json({
+                    ok: false,
+                    error: 'schedule_add_failed'
+                });
+            }
+        });
+
         app.get('/?viewmode=42', function (req, res) {
             res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
         });
-    
     };
 
     obj.handleAdminReq = function (req, res, user) {
