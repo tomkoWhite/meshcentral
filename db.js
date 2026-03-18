@@ -25,6 +25,19 @@ CREATE TABLE IF NOT EXISTS notifications (
 )
 `);
 
+db.exec(`
+CREATE TABLE IF NOT EXISTS schedules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    node_id TEXT NOT NULL,
+    device_name TEXT NOT NULL,
+    start_at INTEGER NOT NULL,
+    end_at INTEGER NOT NULL,
+    start_triggered INTEGER NOT NULL DEFAULT 0,
+    end_triggered INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL
+)
+`);
+
 function addNotification(data) {
     const stmt = db.prepare(`
         INSERT INTO notifications (
@@ -53,7 +66,35 @@ function getActiveNotifications() {
     `).all();
 }
 
+function addSchedule(data) {
+    const stmt = db.prepare(`
+        INSERT INTO schedules (
+            node_id, device_name, start_at, end_at, start_triggered, end_triggered, created_at
+        ) VALUES (?, ?, ?, ?, 0, 0, ?)
+    `);
+
+    const info = stmt.run(
+        data.nodeId,
+        data.deviceName,
+        data.startAt,
+        data.endAt,
+        Date.now()
+    );
+
+    return info.lastInsertRowid;
+}
+
+function getSchedules() {
+    return db.prepare(`
+        SELECT id, node_id, device_name, start_at, end_at, start_triggered, end_triggered, created_at
+        FROM schedules
+        ORDER BY start_at ASC
+    `).all();
+}
+
 module.exports = {
     addNotification,
-    getActiveNotifications
+    getActiveNotifications,
+    addSchedule,
+    getSchedules
 };
