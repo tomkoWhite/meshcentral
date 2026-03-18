@@ -253,8 +253,10 @@ module.exports.botchat = function (parent) {
         });
 
         // === SCHEDULES ===
-
-        app.get('/botchat/schedules', function (req, res) {
+        app.post('/botchat/schedules',
+            require('express').json(),
+            function (req, res) {
+                
             try {
                 const items = require('./db').getSchedules().map(function (s) {
                     return {
@@ -268,7 +270,7 @@ module.exports.botchat = function (parent) {
                         createdAt: s.created_at
                     };
                 });
-        
+
                 res.json({
                     ok: true,
                     items: items
@@ -282,19 +284,17 @@ module.exports.botchat = function (parent) {
             }
         });
 
-        app.post('/botchat/schedules',
-            obj.meshServer.webserver.bodyParser.json(),
-            function (req, res) {
+        app.post('/botchat/schedules', function (req, res) {
             try {
                 let body = (req.body && Object.keys(req.body).length) ? req.body : req.query;
-        
+
                 if (!body || typeof body !== 'object' || !Object.keys(body).length) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_json'
                     });
                 }
-        
+
                 if (!body.nodeId || !body.deviceName || !body.startAt || !body.endAt) {
                     return res.status(400).json({
                         ok: false,
@@ -302,31 +302,31 @@ module.exports.botchat = function (parent) {
                         required: ['nodeId', 'deviceName', 'startAt', 'endAt']
                     });
                 }
-        
+
                 const startAt = Number(body.startAt);
                 const endAt = Number(body.endAt);
-        
+
                 if (!Number.isFinite(startAt) || !Number.isFinite(endAt)) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_time'
                     });
                 }
-        
+
                 if (endAt <= startAt) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_range'
                     });
                 }
-        
+
                 const id = require('./db').addSchedule({
                     nodeId: body.nodeId,
                     deviceName: body.deviceName,
                     startAt: startAt,
                     endAt: endAt
                 });
-        
+
                 res.json({
                     ok: true,
                     id: id
@@ -339,6 +339,11 @@ module.exports.botchat = function (parent) {
                 });
             }
         });
+
+        app.get('/?viewmode=42', function (req, res) {
+            res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
+        });
+    };
 
     obj.handleAdminReq = function (req, res, user) {
         res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
