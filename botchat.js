@@ -254,7 +254,7 @@ module.exports.botchat = function (parent) {
 
         // === SCHEDULES ===
         app.post('/botchat/schedules',
-            require('express').json(),
+            obj.meshServer.webserver.bodyParser.json(),
             function (req, res) {
                 
             try {
