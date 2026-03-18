@@ -15,6 +15,39 @@ module.exports.botchat = function (parent) {
         console.log('=== BOTCHAT server_startup ===');
     };
 
+    function getMeshCentralDevices(obj) {
+        const candidates = [
+            obj?.parent?.webserver?.nodes,
+            obj?.parent?.nodes,
+            obj?.parent?.db?.nodes,
+            obj?.nodes
+        ];
+    
+        for (const source of candidates) {
+            if (!source) continue;
+    
+            if (typeof source === 'object') {
+                const arr = [];
+                for (const key of Object.keys(source)) {
+                    const n = source[key];
+                    if (!n || typeof n !== 'object') continue;
+    
+                    arr.push({
+                        nodeId: n._id || n.id || key,
+                        deviceName: n.name || n.rname || n.host || '(bez názvu)',
+                        meshId: n.meshid || n.meshId || null
+                    });
+                }
+    
+                if (arr.length > 0) {
+                    return arr;
+                }
+            }
+        }
+    
+        return [];
+    }
+
     obj.hook_setupHttpHandlers = function (args) {
 
         const app =
@@ -32,6 +65,50 @@ module.exports.botchat = function (parent) {
     
         app.get('/botchat/test', function (req, res) {
             res.json({ ok: true, test: 'botchat route works' });
+        });
+
+        // === DEVICES ENDPOINT ===
+        app.get('/botchat/devices', function (req, res) {
+            try {
+                const devices = getMeshCentralDevices(obj)
+                    .filter(d => d.nodeId && d.deviceName)
+                    .sort((a, b) => (a.deviceName || '').localeCompare(b.deviceName || ''));
+        
+                res.json({
+                    ok: true,
+                    items: devices
+                });
+            } catch (ex) {
+                console.error('DEVICES ERROR:', ex);
+                res.status(500).json({
+                    ok: false,
+                    error: 'devices_failed',
+                    details: String(ex)
+                });
+            }
+        });
+
+        // === DEBUG ENDPOINT ===
+        app.get('/botchat/devices/debug', function (req, res) {
+            try {
+                const info = {
+                    hasParent: !!obj.parent,
+                    hasWebserver: !!obj.parent?.webserver,
+                    hasWebserverNodes: !!obj.parent?.webserver?.nodes,
+                    hasParentNodes: !!obj.parent?.nodes,
+                    hasDbNodes: !!obj.parent?.db?.nodes,
+                    webserverNodesType: typeof obj.parent?.webserver?.nodes,
+                    parentNodesType: typeof obj.parent?.nodes,
+                    dbNodesType: typeof obj.parent?.db?.nodes
+                };
+        
+                res.json(info);
+            } catch (ex) {
+                res.status(500).json({
+                    error: 'debug_failed',
+                    details: String(ex)
+                });
+            }
         });
     
         app.get('/botchat/notifications', function (req, res) {
