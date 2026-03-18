@@ -253,7 +253,10 @@ module.exports.botchat = function (parent) {
         });
 
         // === SCHEDULES ===
-        app.get('/botchat/schedules', function (req, res) {
+        app.post('/botchat/schedules',
+            require('express').json(),
+            function (req, res) {
+                
             try {
                 const items = require('./db').getSchedules().map(function (s) {
                     return {
