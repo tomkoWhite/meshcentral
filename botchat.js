@@ -15,39 +15,50 @@ module.exports.botchat = function (parent) {
         console.log('=== BOTCHAT server_startup ===');
     };
 
-    function getMeshCentralDevices(obj) {
-        const candidates = [
-            obj?.parent?.webserver?.nodes,
-            obj?.parent?.nodes,
-            obj?.parent?.db?.nodes,
-            obj?.nodes
-        ];
+    function getMeshCentralDevices(obj, req, callback) {
+        try {
+            const ws = obj?.meshServer?.webserver;
+            if (!ws || typeof ws.GetNodesWithRights !== 'function') {
+                return callback([]);
+            }
     
-        for (const source of candidates) {
-            if (!source) continue;
+            const domain = req?.domain;
+            const user = req?.user;
     
-            if (typeof source === 'object') {
-                const arr = [];
-                for (const key of Object.keys(source)) {
-                    const n = source[key];
-                    if (!n || typeof n !== 'object') continue;
+            if (!domain || !user) {
+                console.log('BOTCHAT devices: missing req.domain or req.user');
+                return callback([]);
+            }
     
-                    arr.push({
-                        nodeId: n._id || n.id || key,
+            ws.GetNodesWithRights(domain, user, function (err, nodes) {
+                if (err) {
+                    console.error('BOTCHAT GetNodesWithRights error:', err);
+                    return callback([]);
+                }
+    
+                if (!Array.isArray(nodes)) {
+                    return callback([]);
+                }
+    
+                const devices = nodes.map(function (n) {
+                    return {
+                        nodeId: n._id || n.id || '',
                         deviceName: n.name || n.rname || n.host || '(bez názvu)',
                         meshId: n.meshid || n.meshId || null
-                    });
-                }
+                    };
+                }).filter(function (d) {
+                    return d.nodeId && d.deviceName;
+                }).sort(function (a, b) {
+                    return (a.deviceName || '').localeCompare(b.deviceName || '');
+                });
     
-                if (arr.length > 0) {
-                    return arr;
-                }
-            }
+                callback(devices);
+            });
+        } catch (ex) {
+            console.error('BOTCHAT getMeshCentralDevices exception:', ex);
+            callback([]);
         }
-    
-        return [];
     }
-
     obj.hook_setupHttpHandlers = function (args) {
 
         const app =
@@ -70,13 +81,11 @@ module.exports.botchat = function (parent) {
         // === DEVICES ENDPOINT ===
         app.get('/botchat/devices', function (req, res) {
             try {
-                const devices = getMeshCentralDevices(obj)
-                    .filter(d => d.nodeId && d.deviceName)
-                    .sort((a, b) => (a.deviceName || '').localeCompare(b.deviceName || ''));
-        
-                res.json({
-                    ok: true,
-                    items: devices
+                getMeshCentralDevices(obj, req, function (devices) {
+                    res.json({
+                        ok: true,
+                        items: devices
+                    });
                 });
             } catch (ex) {
                 console.error('DEVICES ERROR:', ex);
@@ -117,20 +126,23 @@ module.exports.botchat = function (parent) {
         // === DEBUG ENDPOINT ===
         app.get('/botchat/devices/debug', function (req, res) {
             try {
-                const info = {
-                    hasParent: !!obj.parent,
-                    hasWebserver: !!obj.parent?.webserver,
-                    hasWebserverNodes: !!obj.parent?.webserver?.nodes,
-                    hasParentNodes: !!obj.parent?.nodes,
-                    hasDbNodes: !!obj.parent?.db?.nodes,
-                    webserverNodesType: typeof obj.parent?.webserver?.nodes,
-                    parentNodesType: typeof obj.parent?.nodes,
-                    dbNodesType: typeof obj.parent?.db?.nodes
-                };
+                const ws = obj?.meshServer?.webserver;
         
-                res.json(info);
+                res.json({
+                    ok: true,
+                    hasMeshServer: !!obj.meshServer,
+                    hasWebserver: !!ws,
+                    hasGetNodesWithRights: !!ws?.GetNodesWithRights,
+                    hasGetNodeWithRights: !!ws?.GetNodeWithRights,
+                    hasCloneSafeNode: !!ws?.CloneSafeNode,
+                    hasReqUser: !!req.user,
+                    hasReqDomain: !!req.domain,
+                    userId: req.user ? (req.user._id || req.user.id || null) : null,
+                    domainId: req.domain ? (req.domain.id || req.domain._id || null) : null
+                });
             } catch (ex) {
                 res.status(500).json({
+                    ok: false,
                     error: 'debug_failed',
                     details: String(ex)
                 });
