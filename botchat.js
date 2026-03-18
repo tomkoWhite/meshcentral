@@ -72,101 +72,6 @@ module.exports.botchat = function (parent) {
             res.json({ ok: true, test: 'botchat route works' });
         });
 
-        // === DEVICES ===
-        app.get('/botchat/devices', function (req, res) {
-            try {
-                getMeshCentralDevices(obj, function (devices) {
-                    res.json({
-                        ok: true,
-                        items: devices
-                    });
-                });
-            } catch (ex) {
-                console.error('DEVICES ERROR:', ex);
-                res.status(500).json({
-                    ok: false,
-                    error: 'devices_failed',
-                    details: String(ex)
-                });
-            }
-        });
-
-        app.get('/botchat/devices/debug', function (req, res) {
-            try {
-                const db = obj?.meshServer?.db;
-
-                res.json({
-                    ok: true,
-                    hasMeshServer: !!obj.meshServer,
-                    hasDb: !!db,
-                    hasGetAllType: !!db?.GetAllType,
-                    hasGetAllTypeNoTypeFieldMeshFiltered: !!db?.GetAllTypeNoTypeFieldMeshFiltered,
-                    hasGetAllTypeNodeFiltered: !!db?.GetAllTypeNodeFiltered,
-                    hasReqUser: !!req.user,
-                    hasReqDomain: !!req.domain
-                });
-            } catch (ex) {
-                res.status(500).json({
-                    ok: false,
-                    error: 'debug_failed',
-                    details: String(ex)
-                });
-            }
-        });
-
-        app.get('/botchat/inspect', function (req, res) {
-            try {
-                function safeKeys(x) {
-                    if (!x || typeof x !== 'object') return [];
-                    try { return Object.keys(x).slice(0, 200); } catch (e) { return ['<unreadable>']; }
-                }
-
-                res.json({
-                    ok: true,
-                    parentKeys: safeKeys(obj.parent),
-                    meshServerKeys: safeKeys(obj.meshServer),
-                    parentParentKeys: safeKeys(obj.parent?.parent),
-                    parentDbKeys: safeKeys(obj.parent?.db),
-                    meshServerDbKeys: safeKeys(obj.meshServer?.db),
-                    parentWebserverKeys: safeKeys(obj.parent?.webserver),
-                    meshServerWebserverKeys: safeKeys(obj.meshServer?.webserver)
-                });
-            } catch (ex) {
-                res.status(500).json({
-                    ok: false,
-                    error: 'inspect_failed',
-                    details: String(ex)
-                });
-            }
-        });
-
-        app.get('/botchat/sessiondebug', function (req, res) {
-            try {
-                function safeKeys(x) {
-                    if (!x || typeof x !== 'object') return [];
-                    try { return Object.keys(x).slice(0, 80); } catch (e) { return ['<unreadable>']; }
-                }
-
-                res.json({
-                    ok: true,
-                    hasSession: !!req.session,
-                    sessionKeys: safeKeys(req.session),
-                    sessionUserId: req.session ? (req.session.userid || req.session.userId || null) : null,
-                    sessionDomainId: req.session ? (req.session.domainid || req.session.domainId || null) : null,
-                    hasCookies: !!req.headers.cookie,
-                    reqKeys: safeKeys(req),
-                    webserverHasUsers: !!obj?.meshServer?.webserver?.users,
-                    webserverUserCount: obj?.meshServer?.webserver?.users ? Object.keys(obj.meshServer.webserver.users).length : 0
-                });
-            } catch (ex) {
-                res.status(500).json({
-                    ok: false,
-                    error: 'sessiondebug_failed',
-                    details: String(ex)
-                });
-            }
-        });
-
         // === NOTIFICATIONS ===
         app.get('/botchat/notifications', function (req, res) {
             try {
@@ -335,6 +240,46 @@ module.exports.botchat = function (parent) {
                 res.status(500).json({
                     ok: false,
                     error: 'schedule_add_failed'
+                });
+            }
+        });
+
+        app.post('/botchat/test-command',
+            obj.meshServer.webserver.bodyParser.json(),
+            function (req, res) {
+            try {
+                let body = req.body;
+        
+                if (!body || !body.nodeId) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'missing_nodeId'
+                    });
+                }
+        
+                const nodeId = body.nodeId;
+        
+                // 👉 command který chceme spustit
+                const command = "mkdir -p ./Desktop botchat-scheduler-test";
+        
+                // 👉 tady voláme MeshCentral agent command
+                obj.meshServer.webserver.routeAgentCommand({
+                    nodeid: nodeId,
+                    action: 'runcommands',
+                    cmds: [command],
+                    type: 'linux'
+                }, null, null);
+        
+                res.json({
+                    ok: true,
+                    message: 'command sent'
+                });
+        
+            } catch (e) {
+                console.error('TEST COMMAND ERROR:', e);
+                res.status(500).json({
+                    ok: false,
+                    error: 'command_failed'
                 });
             }
         });
