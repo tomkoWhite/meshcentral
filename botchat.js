@@ -339,6 +339,39 @@ module.exports.botchat = function (parent) {
             }
         });
 
+        app.delete('/botchat/schedules/:id', function (req, res) {
+            try {
+                const id = Number(req.params.id);
+        
+                if (!Number.isInteger(id) || id <= 0) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'invalid_id'
+                    });
+                }
+        
+                const deleted = require('./db').deleteSchedule(id);
+        
+                if (!deleted) {
+                    return res.status(404).json({
+                        ok: false,
+                        error: 'not_found'
+                    });
+                }
+        
+                res.json({
+                    ok: true,
+                    deleted: true
+                });
+            } catch (e) {
+                console.error('SCHEDULE DELETE ERROR:', e);
+                res.status(500).json({
+                    ok: false,
+                    error: 'schedule_delete_failed'
+                });
+            }
+        });
+
         app.get('/?viewmode=42', function (req, res) {
             res.sendFile(path.join(obj.VIEWS, 'botchat.html'));
         });
