@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <title>BotChat</title>
     <style>
-
     body{
         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
         margin:30px;
@@ -13,7 +12,7 @@
     }
     
     .wrap{
-        max-width:900px;
+        max-width:1400px;
     }
     
     .title{
@@ -32,12 +31,12 @@
         background:#ffffff;
         border-radius:10px;
         padding:12px 16px;
-        margin-bottom:10px;
+        margin-bottom:12px;
         border:1px solid #e4e7eb;
         box-shadow:0 2px 6px rgba(0,0,0,0.05);
         display:flex;
         flex-direction:column;
-        gap:6px;
+        gap:8px;
         transition:all .12s ease;
     }
     
@@ -83,34 +82,188 @@
         background:#1260ad;
     }
     
+    .btn-secondary{
+        background:#64748b;
+    }
+    
+    .btn-secondary:hover{
+        background:#475569;
+    }
+    
     .empty{
         color:#6b7280;
         padding:20px;
     }
 
     input, select {
-        padding:6px;
+        padding:8px;
         border-radius:6px;
-        border:1px solid #ccc;
+        border:1px solid #cbd2d9;
+        font-size:14px;
+        background:#fff;
     }
 
-    .schedule-meta{
+    .scheduler-sticky{
+        position:sticky;
+        top:10px;
+        z-index:20;
+    }
+
+    .scheduler-form-grid{
+        display:grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+        gap:10px;
+        align-items:end;
+    }
+
+    .field{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+    }
+
+    .field label{
         font-size:13px;
         color:#52606d;
+        font-weight:600;
     }
 
-    .schedule-status{
-        display:inline-block;
-        padding:3px 8px;
-        border-radius:999px;
-        font-size:12px;
-        font-weight:600;
-        background:#eef2f7;
-        color:#334e68;
-        width:fit-content;
-        margin-top:4px;
+    .day-toolbar{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
     }
-    
+
+    .planner-shell{
+        background:#fff;
+        border:1px solid #e4e7eb;
+        border-radius:10px;
+        overflow:auto;
+        box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .planner-header{
+        display:grid;
+        grid-template-columns: 160px 1fr;
+        min-width:1400px;
+        border-bottom:1px solid #e4e7eb;
+        background:#f8fafc;
+        position:sticky;
+        top:0;
+        z-index:5;
+    }
+
+    .planner-header-left{
+        padding:10px 12px;
+        font-weight:700;
+        border-right:1px solid #e4e7eb;
+    }
+
+    .planner-hours{
+        position:relative;
+        height:44px;
+        background:
+            repeating-linear-gradient(
+                to right,
+                transparent 0,
+                transparent calc(4.166666% - 1px),
+                #e5e7eb calc(4.166666% - 1px),
+                #e5e7eb 4.166666%
+            );
+    }
+
+    .hour-label{
+        position:absolute;
+        top:12px;
+        transform:translateX(-50%);
+        font-size:12px;
+        color:#52606d;
+        white-space:nowrap;
+    }
+
+    .planner-row{
+        display:grid;
+        grid-template-columns: 160px 1fr;
+        min-width:1400px;
+        border-bottom:1px solid #eef2f7;
+    }
+
+    .planner-row:last-child{
+        border-bottom:none;
+    }
+
+    .planner-server{
+        padding:14px 12px;
+        border-right:1px solid #e4e7eb;
+        background:#fbfcfe;
+        display:flex;
+        align-items:center;
+        font-weight:600;
+        font-size:14px;
+    }
+
+    .planner-track{
+        position:relative;
+        height:64px;
+        background:
+            repeating-linear-gradient(
+                to right,
+                transparent 0,
+                transparent calc(4.166666% - 1px),
+                #edf2f7 calc(4.166666% - 1px),
+                #edf2f7 4.166666%
+            );
+    }
+
+    .schedule-block{
+        position:absolute;
+        top:10px;
+        height:44px;
+        border-radius:8px;
+        background:#0b4a88;
+        color:#fff;
+        padding:6px 10px;
+        box-sizing:border-box;
+        overflow:hidden;
+        cursor:pointer;
+        box-shadow:0 2px 8px rgba(11,74,136,0.25);
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        min-width:18px;
+    }
+
+    .schedule-block:hover{
+        background:#1260ad;
+    }
+
+    .schedule-block-title{
+        font-size:12px;
+        font-weight:700;
+        line-height:1.1;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    .schedule-block-time{
+        font-size:11px;
+        opacity:0.95;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    .planner-empty{
+        padding:20px;
+        color:#6b7280;
+    }
+
+    .hint{
+        font-size:12px;
+        color:#6b7280;
+    }
     </style>
 </head>
 <body>
@@ -127,27 +280,56 @@
         </div>
 
         <div id="schedulerTab" style="display:none;">
-            <div class="card">
-                <div style="font-weight:600; margin-bottom:10px;">Nový schedule</div>
+            <div class="scheduler-sticky">
+                <div class="card">
+                    <div style="font-weight:600; margin-bottom:6px;">Nový schedule</div>
 
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <label>Server</label>
-                    <select id="deviceSelect"></select>
+                    <div class="scheduler-form-grid">
+                        <div class="field">
+                            <label for="deviceSelect">Server</label>
+                            <select id="deviceSelect"></select>
+                        </div>
 
-                    <label>Datum</label>
-                    <input type="date" id="scheduleDate">
+                        <div class="field">
+                            <label for="scheduleDate">Datum</label>
+                            <input type="date" id="scheduleDate">
+                        </div>
 
-                    <label>Čas od</label>
-                    <input type="time" id="startTime">
+                        <div class="field">
+                            <label for="startTime">Čas od</label>
+                            <input type="time" id="startTime">
+                        </div>
 
-                    <label>Čas do</label>
-                    <input type="time" id="endTime">
+                        <div class="field">
+                            <label for="endTime">Čas do</label>
+                            <input type="time" id="endTime">
+                        </div>
 
-                    <button class="btn" onclick="createSchedule()">Přidat schedule</button>
+                        <div class="field">
+                            <label>&nbsp;</label>
+                            <button class="btn" onclick="createSchedule()">Přidat schedule</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="day-toolbar">
+                        <button class="btn btn-secondary" onclick="changePlannerDay(-1)">← Předchozí den</button>
+                        <input type="date" id="plannerDate" onchange="loadSchedules()">
+                        <button class="btn btn-secondary" onclick="changePlannerDay(1)">Další den →</button>
+                        <button class="btn" onclick="goToToday()">Dnes</button>
+                        <span class="hint">Denní přehled schedule bloků od 00:00 do 23:59</span>
+                    </div>
                 </div>
             </div>
 
-            <div id="scheduleList" class="empty">Zatím žádné plány.</div>
+            <div class="planner-shell">
+                <div class="planner-header">
+                    <div class="planner-header-left">Server / čas</div>
+                    <div class="planner-hours" id="plannerHours"></div>
+                </div>
+                <div id="plannerBody"></div>
+            </div>
         </div>
     </div>
 
@@ -156,6 +338,7 @@
         let knownIds = new Set();
         let notificationsInitialized = false;
         let devices = [];
+        let schedules = [];
 
         function showTab(tabId) {
             document.getElementById('notificationsTab').style.display = 'none';
@@ -180,7 +363,6 @@
         
                 oscillator.start();
                 oscillator.stop(ctx.currentTime + 0.35);
-        
             } catch (e) {
                 console.log('audio error', e);
             }
@@ -201,16 +383,13 @@
             return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
         }
 
-        function formatDateTime(ts) {
-            return new Date(ts).toLocaleString('cs-CZ');
-        }
-
-        function getScheduleStatus(item) {
-            const now = Date.now();
-
-            if (item.endAt <= now) return 'Dokončeno';
-            if (item.startAt <= now && item.endAt > now) return 'Aktivní';
-            return 'Naplánováno';
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g,'&amp;')
+                .replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;')
+                .replace(/'/g,'&#039;');
         }
 
         function openDesktop(nodeId) {
@@ -247,51 +426,6 @@
                 card.querySelector('button').onclick = () => openDesktop(item.nodeId);
                 root.appendChild(card);
             });
-        }
-
-        function renderSchedules(items) {
-            const root = document.getElementById('scheduleList');
-
-            if (!items || !items.length) {
-                root.innerHTML = '<div class="empty">Žádné plány.</div>';
-                return;
-            }
-
-            root.innerHTML = '';
-
-            items.forEach(function (item) {
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                const status = getScheduleStatus(item);
-
-                card.innerHTML =
-                    '<div class="card-top">' +
-                        '<div class="device">🖥 ' + escapeHtml(item.deviceName) + '</div>' +
-                        '<div style="display:flex;align-items:center;gap:12px;">' +
-                            '<button class="btn">Connect</button>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="schedule-meta"><b>Začátek:</b> ' + escapeHtml(formatDateTime(item.startAt)) + '</div>' +
-                    '<div class="schedule-meta"><b>Konec:</b> ' + escapeHtml(formatDateTime(item.endAt)) + '</div>' +
-                    '<div class="schedule-meta"><b>Node ID:</b> ' + escapeHtml(item.nodeId) + '</div>' +
-                    '<div class="schedule-status">' + escapeHtml(status) + '</div>';
-
-                card.querySelector('button').onclick = function () {
-                    openDesktop(item.nodeId);
-                };
-
-                root.appendChild(card);
-            });
-        }
-
-        function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g,'&amp;')
-                .replace(/</g,'&lt;')
-                .replace(/>/g,'&gt;')
-                .replace(/"/g,'&quot;')
-                .replace(/'/g,'&#039;');
         }
 
         async function loadNotifications() {
@@ -343,9 +477,152 @@
                     select.appendChild(opt);
                 });
 
+                renderPlanner();
             } catch (e) {
                 console.error('loadDevices error:', e);
             }
+        }
+
+        function setDefaultDates() {
+            const today = toDateInputValue(new Date());
+            document.getElementById('scheduleDate').value = today;
+            document.getElementById('plannerDate').value = today;
+        }
+
+        function toDateInputValue(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function changePlannerDay(delta) {
+            const input = document.getElementById('plannerDate');
+            if (!input.value) return;
+
+            const dt = new Date(input.value + 'T00:00:00');
+            dt.setDate(dt.getDate() + delta);
+            input.value = toDateInputValue(dt);
+            loadSchedules();
+        }
+
+        function goToToday() {
+            document.getElementById('plannerDate').value = toDateInputValue(new Date());
+            loadSchedules();
+        }
+
+        function minutesFromMidnight(ts) {
+            const d = new Date(ts);
+            return (d.getHours() * 60) + d.getMinutes();
+        }
+
+        function formatTimeHM(ts) {
+            const d = new Date(ts);
+            const h = String(d.getHours()).padStart(2, '0');
+            const m = String(d.getMinutes()).padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        function renderPlannerHours() {
+            const root = document.getElementById('plannerHours');
+            root.innerHTML = '';
+
+            for (let hour = 0; hour < 24; hour++) {
+                const label = document.createElement('div');
+                label.className = 'hour-label';
+                label.style.left = (hour / 24 * 100) + '%';
+                label.textContent = String(hour).padStart(2, '0') + ':00';
+                root.appendChild(label);
+            }
+        }
+
+        function getSelectedPlannerDateRange() {
+            const dateValue = document.getElementById('plannerDate').value;
+            if (!dateValue) return null;
+
+            const start = new Date(dateValue + 'T00:00:00').getTime();
+            const end = new Date(dateValue + 'T23:59:59.999').getTime();
+
+            return { start, end };
+        }
+
+        function filterSchedulesForSelectedDay() {
+            const range = getSelectedPlannerDateRange();
+            if (!range) return [];
+
+            return schedules.filter(function (item) {
+                return item.startAt <= range.end && item.endAt >= range.start;
+            });
+        }
+
+        function renderPlanner() {
+            const body = document.getElementById('plannerBody');
+            body.innerHTML = '';
+
+            if (!devices.length) {
+                body.innerHTML = '<div class="planner-empty">Žádné dostupné servery.</div>';
+                return;
+            }
+
+            const selectedDaySchedules = filterSchedulesForSelectedDay();
+
+            devices.forEach(function (device) {
+                const row = document.createElement('div');
+                row.className = 'planner-row';
+
+                const left = document.createElement('div');
+                left.className = 'planner-server';
+                left.textContent = device.deviceName;
+
+                const track = document.createElement('div');
+                track.className = 'planner-track';
+
+                const deviceSchedules = selectedDaySchedules.filter(function (s) {
+                    return s.nodeId === device.nodeId;
+                });
+
+                const range = getSelectedPlannerDateRange();
+                const dayStart = range.start;
+                const dayEnd = range.end;
+
+                deviceSchedules.forEach(function (item) {
+                    const clippedStart = Math.max(item.startAt, dayStart);
+                    const clippedEnd = Math.min(item.endAt, dayEnd);
+
+                    const startMin = minutesFromMidnight(clippedStart);
+                    const endMin = minutesFromMidnight(clippedEnd);
+
+                    let leftPct = (startMin / 1440) * 100;
+                    let widthPct = ((endMin - startMin) / 1440) * 100;
+
+                    if (widthPct < 0.6) widthPct = 0.6;
+
+                    const block = document.createElement('div');
+                    block.className = 'schedule-block';
+                    block.style.left = leftPct + '%';
+                    block.style.width = widthPct + '%';
+
+                    block.innerHTML =
+                        '<div class="schedule-block-title">' + escapeHtml(item.deviceName) + '</div>' +
+                        '<div class="schedule-block-time">' + escapeHtml(formatTimeHM(item.startAt) + ' - ' + formatTimeHM(item.endAt)) + '</div>';
+
+                    block.onclick = function () {
+                        alert(
+                            'Schedule ID: ' + item.id + '\n' +
+                            'Server: ' + item.deviceName + '\n' +
+                            'Od: ' + new Date(item.startAt).toLocaleString('cs-CZ') + '\n' +
+                            'Do: ' + new Date(item.endAt).toLocaleString('cs-CZ') + '\n\n' +
+                            'Mazání přidáme v dalším kroku.'
+                        );
+                    };
+
+                    track.appendChild(block);
+                });
+
+                row.appendChild(left);
+                row.appendChild(track);
+                body.appendChild(row);
+            });
         }
 
         async function loadSchedules() {
@@ -355,7 +632,7 @@
 
                 if (!data.ok) return;
 
-                const items = (data.items || []).map(function (s) {
+                schedules = (data.items || []).map(function (s) {
                     return {
                         id: s.id,
                         nodeId: s.nodeId,
@@ -368,7 +645,7 @@
                     };
                 });
 
-                renderSchedules(items);
+                renderPlanner();
             } catch (e) {
                 console.error('loadSchedules error:', e);
             }
@@ -426,12 +703,12 @@
                     return;
                 }
 
-                document.getElementById('scheduleDate').value = '';
                 document.getElementById('startTime').value = '';
                 document.getElementById('endTime').value = '';
+                document.getElementById('plannerDate').value = date;
 
                 await loadSchedules();
-                alert('Schedule uložen.');
+                showTab('schedulerTab');
             } catch (e) {
                 console.error('createSchedule error:', e);
                 alert('Chyba při ukládání schedule.');
@@ -441,6 +718,8 @@
         setInterval(renderNotifications, 1000);
         setInterval(loadNotifications, 5000);
 
+        renderPlannerHours();
+        setDefaultDates();
         loadNotifications();
         loadDevices();
         loadSchedules();
