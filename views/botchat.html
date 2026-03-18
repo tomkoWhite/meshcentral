@@ -1,312 +1,449 @@
 <!DOCTYPE html>
-
 <html lang="cs">
 <head>
     <meta charset="utf-8">
     <title>BotChat</title>
     <style>
 
-```
-body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    margin:30px;
-    background:#f4f6f9;
-    color:#1f2933;
-}
+    body{
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+        margin:30px;
+        background:#f4f6f9;
+        color:#1f2933;
+    }
+    
+    .wrap{
+        max-width:900px;
+    }
+    
+    .title{
+        font-size:24px;
+        font-weight:600;
+        margin-bottom:18px;
+    }
 
-.wrap{
-    max-width:900px;
-}
+    .tabs{
+        display:flex;
+        gap:10px;
+        margin-bottom:20px;
+    }
+    
+    .card{
+        background:#ffffff;
+        border-radius:10px;
+        padding:12px 16px;
+        margin-bottom:10px;
+        border:1px solid #e4e7eb;
+        box-shadow:0 2px 6px rgba(0,0,0,0.05);
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+        transition:all .12s ease;
+    }
+    
+    .card:hover{
+        box-shadow:0 4px 10px rgba(0,0,0,0.08);
+    }
+    
+    .card-top{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+    }
+    
+    .device{
+        font-size:15px;
+        font-weight:600;
+    }
+    
+    .timer{
+        font-size:14px;
+        font-weight:600;
+        color:#d64545;
+    }
+    
+    .message{
+        font-size:13px;
+        color:#52606d;
+    }
+    
+    .btn{
+        padding:6px 12px;
+        border:none;
+        border-radius:6px;
+        background:#0b4a88;
+        color:white;
+        font-size:13px;
+        font-weight:500;
+        cursor:pointer;
+        transition:all .15s ease;
+    }
+    
+    .btn:hover{
+        background:#1260ad;
+    }
+    
+    .empty{
+        color:#6b7280;
+        padding:20px;
+    }
 
-.title{
-    font-size:24px;
-    font-weight:600;
-    margin-bottom:18px;
-}
+    input, select {
+        padding:6px;
+        border-radius:6px;
+        border:1px solid #ccc;
+    }
 
-.tabs{
-    display:flex;
-    gap:10px;
-    margin-bottom:20px;
-}
+    .schedule-meta{
+        font-size:13px;
+        color:#52606d;
+    }
 
-.card{
-    background:#ffffff;
-    border-radius:10px;
-    padding:12px 16px;
-    margin-bottom:10px;
-    border:1px solid #e4e7eb;
-    box-shadow:0 2px 6px rgba(0,0,0,0.05);
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    transition:all .12s ease;
-}
-
-.card:hover{
-    box-shadow:0 4px 10px rgba(0,0,0,0.08);
-}
-
-.card-top{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-}
-
-.device{
-    font-size:15px;
-    font-weight:600;
-}
-
-.timer{
-    font-size:14px;
-    font-weight:600;
-    color:#d64545;
-}
-
-.message{
-    font-size:13px;
-    color:#52606d;
-}
-
-.btn{
-    padding:6px 12px;
-    border:none;
-    border-radius:6px;
-    background:#0b4a88;
-    color:white;
-    font-size:13px;
-    font-weight:500;
-    cursor:pointer;
-    transition:all .15s ease;
-}
-
-.btn:hover{
-    background:#1260ad;
-}
-
-.empty{
-    color:#6b7280;
-    padding:20px;
-}
-
-input, select {
-    padding:6px;
-    border-radius:6px;
-    border:1px solid #ccc;
-}
-
-</style>
-```
-
+    .schedule-status{
+        display:inline-block;
+        padding:3px 8px;
+        border-radius:999px;
+        font-size:12px;
+        font-weight:600;
+        background:#eef2f7;
+        color:#334e68;
+        width:fit-content;
+        margin-top:4px;
+    }
+    
+    </style>
 </head>
 <body>
     <div class="wrap">
         <div class="title">BotChat</div>
 
-```
-    <div class="tabs">
-        <button class="btn" onclick="showTab('notificationsTab')">Notifikace</button>
-        <button class="btn" onclick="showTab('schedulerTab')">Scheduler</button>
-    </div>
-
-    <!-- NOTIFICATIONS -->
-    <div id="notificationsTab">
-        <div id="notifications"></div>
-    </div>
-
-    <!-- SCHEDULER -->
-    <div id="schedulerTab" style="display:none;">
-        <div class="card">
-            <div style="font-weight:600; margin-bottom:10px;">Nový schedule</div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                <label>Server</label>
-                <select id="deviceSelect"></select>
-
-                <label>Datum</label>
-                <input type="date" id="scheduleDate">
-
-                <label>Čas od</label>
-                <input type="time" id="startTime">
-
-                <label>Čas do</label>
-                <input type="time" id="endTime">
-
-                <button class="btn" onclick="createSchedule()">Přidat schedule</button>
-            </div>
+        <div class="tabs">
+            <button class="btn" onclick="showTab('notificationsTab')">Notifikace</button>
+            <button class="btn" onclick="showTab('schedulerTab')">Scheduler</button>
         </div>
 
-        <div id="scheduleList" class="empty">Zatím žádné plány.</div>
+        <div id="notificationsTab">
+            <div id="notifications"></div>
+        </div>
+
+        <div id="schedulerTab" style="display:none;">
+            <div class="card">
+                <div style="font-weight:600; margin-bottom:10px;">Nový schedule</div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label>Server</label>
+                    <select id="deviceSelect"></select>
+
+                    <label>Datum</label>
+                    <input type="date" id="scheduleDate">
+
+                    <label>Čas od</label>
+                    <input type="time" id="startTime">
+
+                    <label>Čas do</label>
+                    <input type="time" id="endTime">
+
+                    <button class="btn" onclick="createSchedule()">Přidat schedule</button>
+                </div>
+            </div>
+
+            <div id="scheduleList" class="empty">Zatím žádné plány.</div>
+        </div>
     </div>
-</div>
 
-<script>
-    let botchatItems = [];
-    let knownIds = new Set();
-    let notificationsInitialized = false;
-    let devices = [];
+    <script>
+        let botchatItems = [];
+        let knownIds = new Set();
+        let notificationsInitialized = false;
+        let devices = [];
 
-    function showTab(tabId) {
-        document.getElementById('notificationsTab').style.display = 'none';
-        document.getElementById('schedulerTab').style.display = 'none';
-        document.getElementById(tabId).style.display = 'block';
-    }
-
-    function playNotificationSound() {
-        if (!document.hidden) return;
-    
-        try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = ctx.createOscillator();
-            const gain = ctx.createGain();
-    
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, ctx.currentTime);
-            gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    
-            oscillator.connect(gain);
-            gain.connect(ctx.destination);
-    
-            oscillator.start();
-            oscillator.stop(ctx.currentTime + 0.35);
-    
-        } catch (e) {
-            console.log('audio error', e);
-        }
-    }
-
-    function formatRemaining(ms) {
-        if (ms <= 0) return 'Vypršelo';
-
-        const totalSeconds = Math.floor(ms / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-
-        if (hours > 0) {
-            return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+        function showTab(tabId) {
+            document.getElementById('notificationsTab').style.display = 'none';
+            document.getElementById('schedulerTab').style.display = 'none';
+            document.getElementById(tabId).style.display = 'block';
         }
 
-        return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
-    }
-
-    function openDesktop(nodeId) {
-        window.location.href = '/login?viewmode=11&hide=31&nobotchat=1&gotonode=' + nodeId;
-    }
-
-    function renderNotifications() {
-        const root = document.getElementById('notifications');
-        root.innerHTML = '';
-
-        botchatItems.sort((a,b)=>a.expiresAt-b.expiresAt);
-
-        if (!botchatItems.length) {
-            root.innerHTML = '<div class="empty">Žádné aktivní notifikace.</div>';
-            return;
+        function playNotificationSound() {
+            if (!document.hidden) return;
+        
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = ctx.createOscillator();
+                const gain = ctx.createGain();
+        
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        
+                oscillator.connect(gain);
+                gain.connect(ctx.destination);
+        
+                oscillator.start();
+                oscillator.stop(ctx.currentTime + 0.35);
+        
+            } catch (e) {
+                console.log('audio error', e);
+            }
         }
 
-        botchatItems.forEach(item=>{
-            const remaining = item.expiresAt - Date.now();
+        function formatRemaining(ms) {
+            if (ms <= 0) return 'Vypršelo';
 
-            const card = document.createElement('div');
-            card.className = 'card';
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
 
-            card.innerHTML =
-                '<div class="card-top">' +
-                    '<div class="device">🖥 ' + escapeHtml(item.deviceName) + '</div>' +
-                    '<div style="display:flex;align-items:center;gap:12px;">' +
-                        '<div class="timer">⏱ ' + formatRemaining(remaining) + '</div>' +
-                        '<button class="btn">Connect</button>' +
+            if (hours > 0) {
+                return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+            }
+
+            return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+        }
+
+        function formatDateTime(ts) {
+            return new Date(ts).toLocaleString('cs-CZ');
+        }
+
+        function getScheduleStatus(item) {
+            const now = Date.now();
+
+            if (item.endAt <= now) return 'Dokončeno';
+            if (item.startAt <= now && item.endAt > now) return 'Aktivní';
+            return 'Naplánováno';
+        }
+
+        function openDesktop(nodeId) {
+            window.location.href = '/login?viewmode=11&hide=31&nobotchat=1&gotonode=' + nodeId;
+        }
+
+        function renderNotifications() {
+            const root = document.getElementById('notifications');
+            root.innerHTML = '';
+
+            botchatItems.sort((a, b) => a.expiresAt - b.expiresAt);
+
+            if (!botchatItems.length) {
+                root.innerHTML = '<div class="empty">Žádné aktivní notifikace.</div>';
+                return;
+            }
+
+            botchatItems.forEach(item => {
+                const remaining = item.expiresAt - Date.now();
+
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                card.innerHTML =
+                    '<div class="card-top">' +
+                        '<div class="device">🖥 ' + escapeHtml(item.deviceName) + '</div>' +
+                        '<div style="display:flex;align-items:center;gap:12px;">' +
+                            '<div class="timer">⏱ ' + formatRemaining(remaining) + '</div>' +
+                            '<button class="btn">Connect</button>' +
+                        '</div>' +
                     '</div>' +
-                '</div>' +
-                '<div class="message">' + escapeHtml(item.message) + '</div>';
+                    '<div class="message">' + escapeHtml(item.message) + '</div>';
 
-            card.querySelector('button').onclick = () => openDesktop(item.nodeId);
-            root.appendChild(card);
-        });
-    }
+                card.querySelector('button').onclick = () => openDesktop(item.nodeId);
+                root.appendChild(card);
+            });
+        }
 
-    function escapeHtml(str) {
-        return String(str)
-            .replace(/&/g,'&amp;')
-            .replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;')
-            .replace(/"/g,'&quot;')
-            .replace(/'/g,'&#039;');
-    }
+        function renderSchedules(items) {
+            const root = document.getElementById('scheduleList');
 
-    async function loadNotifications() {
-        try {
-            const res = await fetch('/botchat/notifications');
-            const data = await res.json();
+            if (!items || !items.length) {
+                root.innerHTML = '<div class="empty">Žádné plány.</div>';
+                return;
+            }
 
-            if (data.ok) {
-                const items = data.items || [];
+            root.innerHTML = '';
 
-                if (!notificationsInitialized) {
-                    knownIds = new Set(items.map(i=>i.id));
-                    notificationsInitialized = true;
+            items.forEach(function (item) {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const status = getScheduleStatus(item);
+
+                card.innerHTML =
+                    '<div class="card-top">' +
+                        '<div class="device">🖥 ' + escapeHtml(item.deviceName) + '</div>' +
+                        '<div style="display:flex;align-items:center;gap:12px;">' +
+                            '<button class="btn">Connect</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="schedule-meta"><b>Začátek:</b> ' + escapeHtml(formatDateTime(item.startAt)) + '</div>' +
+                    '<div class="schedule-meta"><b>Konec:</b> ' + escapeHtml(formatDateTime(item.endAt)) + '</div>' +
+                    '<div class="schedule-meta"><b>Node ID:</b> ' + escapeHtml(item.nodeId) + '</div>' +
+                    '<div class="schedule-status">' + escapeHtml(status) + '</div>';
+
+                card.querySelector('button').onclick = function () {
+                    openDesktop(item.nodeId);
+                };
+
+                root.appendChild(card);
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g,'&amp;')
+                .replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;')
+                .replace(/'/g,'&#039;');
+        }
+
+        async function loadNotifications() {
+            try {
+                const res = await fetch('/botchat/notifications');
+                const data = await res.json();
+
+                if (data.ok) {
+                    const items = data.items || [];
+
+                    if (!notificationsInitialized) {
+                        knownIds = new Set(items.map(i => i.id));
+                        notificationsInitialized = true;
+                        botchatItems = items;
+                        renderNotifications();
+                        return;
+                    }
+
+                    const newItems = items.filter(i => !knownIds.has(i.id));
+                    knownIds = new Set(items.map(i => i.id));
                     botchatItems = items;
                     renderNotifications();
+
+                    if (newItems.length > 0) {
+                        playNotificationSound();
+                    }
+                }
+            } catch (e) {
+                console.error('loadNotifications error:', e);
+            }
+        }
+
+        async function loadDevices() {
+            try {
+                const res = await fetch('/botchat/devices', { credentials: 'include' });
+                const data = await res.json();
+
+                if (!data.ok) return;
+
+                devices = data.items || [];
+
+                const select = document.getElementById('deviceSelect');
+                select.innerHTML = '';
+
+                devices.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.nodeId;
+                    opt.textContent = d.deviceName;
+                    select.appendChild(opt);
+                });
+
+            } catch (e) {
+                console.error('loadDevices error:', e);
+            }
+        }
+
+        async function loadSchedules() {
+            try {
+                const res = await fetch('/botchat/schedules', { credentials: 'include' });
+                const data = await res.json();
+
+                if (!data.ok) return;
+
+                const items = (data.items || []).map(function (s) {
+                    return {
+                        id: s.id,
+                        nodeId: s.nodeId,
+                        deviceName: s.deviceName,
+                        startAt: Number(s.startAt),
+                        endAt: Number(s.endAt),
+                        startTriggered: s.startTriggered,
+                        endTriggered: s.endTriggered,
+                        createdAt: s.createdAt
+                    };
+                });
+
+                renderSchedules(items);
+            } catch (e) {
+                console.error('loadSchedules error:', e);
+            }
+        }
+
+        async function createSchedule() {
+            const select = document.getElementById('deviceSelect');
+            const nodeId = select.value;
+            const deviceName = select.selectedOptions.length ? select.selectedOptions[0].text : '';
+            const date = document.getElementById('scheduleDate').value;
+            const start = document.getElementById('startTime').value;
+            const end = document.getElementById('endTime').value;
+
+            if (!nodeId || !deviceName) {
+                alert('Vyber server.');
+                return;
+            }
+
+            if (!date || !start || !end) {
+                alert('Vyplň datum, čas od a čas do.');
+                return;
+            }
+
+            const startAt = new Date(date + 'T' + start).getTime();
+            const endAt = new Date(date + 'T' + end).getTime();
+
+            if (!Number.isFinite(startAt) || !Number.isFinite(endAt)) {
+                alert('Neplatný datum nebo čas.');
+                return;
+            }
+
+            if (endAt <= startAt) {
+                alert('Čas konce musí být větší než čas začátku.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/botchat/schedules', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        nodeId: nodeId,
+                        deviceName: deviceName,
+                        startAt: startAt,
+                        endAt: endAt
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!data.ok) {
+                    alert('Nepodařilo se uložit schedule.');
+                    console.error('createSchedule error response:', data);
                     return;
                 }
 
-                const newItems = items.filter(i=>!knownIds.has(i.id));
-                knownIds = new Set(items.map(i=>i.id));
-                botchatItems = items;
-                renderNotifications();
+                document.getElementById('scheduleDate').value = '';
+                document.getElementById('startTime').value = '';
+                document.getElementById('endTime').value = '';
 
-                if (newItems.length > 0) {
-                    playNotificationSound();
-                }
+                await loadSchedules();
+                alert('Schedule uložen.');
+            } catch (e) {
+                console.error('createSchedule error:', e);
+                alert('Chyba při ukládání schedule.');
             }
-        } catch (e) {
-            console.error('loadNotifications error:', e);
         }
-    }
 
-    async function loadDevices() {
-        try {
-            const res = await fetch('/botchat/devices', { credentials: 'include' });
-            const data = await res.json();
+        setInterval(renderNotifications, 1000);
+        setInterval(loadNotifications, 5000);
 
-            if (!data.ok) return;
-
-            devices = data.items || [];
-
-            const select = document.getElementById('deviceSelect');
-            select.innerHTML = '';
-
-            devices.forEach(d=>{
-                const opt = document.createElement('option');
-                opt.value = d.nodeId;
-                opt.textContent = d.deviceName;
-                select.appendChild(opt);
-            });
-
-        } catch (e) {
-            console.error('loadDevices error:', e);
-        }
-    }
-
-    function createSchedule() {
-        const nodeId = document.getElementById('deviceSelect').value;
-        const date = document.getElementById('scheduleDate').value;
-        const start = document.getElementById('startTime').value;
-        const end = document.getElementById('endTime').value;
-
-        console.log('NEW SCHEDULE:', { nodeId, date, start, end });
-        alert('Zatím jen test — koukni do console 😉');
-    }
-
-    setInterval(renderNotifications, 1000);
-    setInterval(loadNotifications, 5000);
-
-    loadNotifications();
-    loadDevices();
-</script>
-```
-
+        loadNotifications();
+        loadDevices();
+        loadSchedules();
+    </script>
 </body>
 </html>
