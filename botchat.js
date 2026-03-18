@@ -36,14 +36,19 @@ module.exports.botchat = function (parent) {
                 }
 
                 const devices = docs.map(function (n) {
+                    const fullId = n._id || n.id || '';
+                
                     return {
-                        nodeId: n._id || n.id || '',
+                        nodeId: fullId.replace(/^node\/\//, ''), // 👈 bez "node//"
+                        fullNodeId: fullId,                      // 👈 původní hodnota
                         deviceName: n.name || n.rname || n.host || '(bez názvu)',
                         meshId: n.meshid || n.meshId || null
                     };
-                }).filter(function (d) {
+                })
+                .filter(function (d) {
                     return d.nodeId;
-                }).sort(function (a, b) {
+                })
+                .sort(function (a, b) {
                     return (a.deviceName || '').localeCompare(b.deviceName || '');
                 });
 
