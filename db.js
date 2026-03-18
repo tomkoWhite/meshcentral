@@ -102,10 +102,50 @@ function deleteSchedule(id) {
     return info.changes > 0;
 }
 
+function getDueStartSchedules(now) {
+    return db.prepare(`
+        SELECT id, node_id, device_name, start_at, end_at, start_triggered, end_triggered, created_at
+        FROM schedules
+        WHERE start_triggered = 0 AND start_at <= ?
+        ORDER BY start_at ASC
+    `).all(now);
+}
+
+function getDueEndSchedules(now) {
+    return db.prepare(`
+        SELECT id, node_id, device_name, start_at, end_at, start_triggered, end_triggered, created_at
+        FROM schedules
+        WHERE end_triggered = 0 AND end_at <= ?
+        ORDER BY end_at ASC
+    `).all(now);
+}
+
+function markScheduleStartTriggered(id) {
+    const stmt = db.prepare(`
+        UPDATE schedules
+        SET start_triggered = 1
+        WHERE id = ?
+    `);
+    stmt.run(id);
+}
+
+function markScheduleEndTriggered(id) {
+    const stmt = db.prepare(`
+        UPDATE schedules
+        SET end_triggered = 1
+        WHERE id = ?
+    `);
+    stmt.run(id);
+}
+
 module.exports = {
     addNotification,
     getActiveNotifications,
     addSchedule,
     getSchedules,
-    deleteSchedule
+    deleteSchedule,
+    getDueStartSchedules,
+    getDueEndSchedules,
+    markScheduleStartTriggered,
+    markScheduleEndTriggered
 };
