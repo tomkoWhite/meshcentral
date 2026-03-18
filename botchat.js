@@ -88,6 +88,32 @@ module.exports.botchat = function (parent) {
             }
         });
 
+        app.get('/botchat/inspect', function (req, res) {
+            try {
+                function safeKeys(x) {
+                    if (!x || typeof x !== 'object') return [];
+                    try { return Object.keys(x).slice(0, 200); } catch (e) { return ['<unreadable>']; }
+                }
+        
+                res.json({
+                    ok: true,
+                    parentKeys: safeKeys(obj.parent),
+                    meshServerKeys: safeKeys(obj.meshServer),
+                    parentParentKeys: safeKeys(obj.parent?.parent),
+                    parentDbKeys: safeKeys(obj.parent?.db),
+                    meshServerDbKeys: safeKeys(obj.meshServer?.db),
+                    parentWebserverKeys: safeKeys(obj.parent?.webserver),
+                    meshServerWebserverKeys: safeKeys(obj.meshServer?.webserver)
+                });
+            } catch (ex) {
+                res.status(500).json({
+                    ok: false,
+                    error: 'inspect_failed',
+                    details: String(ex)
+                });
+            }
+        });
+
         // === DEBUG ENDPOINT ===
         app.get('/botchat/devices/debug', function (req, res) {
             try {
