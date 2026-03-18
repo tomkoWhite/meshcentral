@@ -9,9 +9,11 @@ module.exports.botchat = function (parent) {
     obj.meshServer = parent.parent;
     obj.exports = ['onWebUIStartupEnd', 'goPageEnd'];
     obj.VIEWS = path.join(__dirname, 'views');
+    obj.schedulerTimer = null;
 
     obj.server_startup = function () {
         console.log('=== BOTCHAT server_startup ===');
+        startScheduleLoop();
     };
 
     function getMeshCentralDevices(obj, callback) {
@@ -53,6 +55,74 @@ module.exports.botchat = function (parent) {
         }
     }
 
+    function createSchedulerNotification(kind, schedule) {
+        const now = Date.now();
+        const db = require('./db');
+
+        let title = '';
+        let message = '';
+
+        if (kind === 'start') {
+            title = 'Scheduler start';
+            message = 'Začal naplánovaný interval pro server ' + schedule.device_name + '.';
+        } else {
+            title = 'Scheduler end';
+            message = 'Skončil naplánovaný interval pro server ' + schedule.device_name + '.';
+        }
+
+        return db.addNotification({
+            nodeId: schedule.node_id,
+            deviceName: schedule.device_name,
+            title: title,
+            message: message,
+            createdAt: now,
+            expiresAt: now + (5 * 60 * 1000)
+        });
+    }
+
+    function processDueSchedules() {
+        try {
+            const db = require('./db');
+            const now = Date.now();
+
+            const dueStarts = db.getDueStartSchedules(now);
+            dueStarts.forEach(function (schedule) {
+                try {
+                    createSchedulerNotification('start', schedule);
+                    db.markScheduleStartTriggered(schedule.id);
+                    console.log('BOTCHAT scheduler start triggered:', schedule.id, schedule.device_name);
+                } catch (ex) {
+                    console.error('BOTCHAT start trigger failed for schedule', schedule.id, ex);
+                }
+            });
+
+            const dueEnds = db.getDueEndSchedules(now);
+            dueEnds.forEach(function (schedule) {
+                try {
+                    createSchedulerNotification('end', schedule);
+                    db.markScheduleEndTriggered(schedule.id);
+                    console.log('BOTCHAT scheduler end triggered:', schedule.id, schedule.device_name);
+                } catch (ex) {
+                    console.error('BOTCHAT end trigger failed for schedule', schedule.id, ex);
+                }
+            });
+        } catch (ex) {
+            console.error('BOTCHAT processDueSchedules error:', ex);
+        }
+    }
+
+    function startScheduleLoop() {
+        if (obj.schedulerTimer) return;
+
+        processDueSchedules();
+
+        obj.schedulerTimer = setInterval(function () {
+            processDueSchedules();
+        }, 5000);
+
+        console.log('BOTCHAT scheduler loop started');
+    }
+
     obj.hook_setupHttpHandlers = function (args) {
 
         const app =
@@ -66,10 +136,26 @@ module.exports.botchat = function (parent) {
             return;
         }
 
-        // app.use(obj.parent.express.json());
-
         app.get('/botchat/test', function (req, res) {
             res.json({ ok: true, test: 'botchat route works' });
+        });
+
+        app.get('/botchat/devices', function (req, res) {
+            try {
+                getMeshCentralDevices(obj, function (devices) {
+                    res.json({
+                        ok: true,
+                        items: devices
+                    });
+                });
+            } catch (ex) {
+                console.error('DEVICES ERROR:', ex);
+                res.status(500).json({
+                    ok: false,
+                    error: 'devices_failed',
+                    details: String(ex)
+                });
+            }
         });
 
         // === NOTIFICATIONS ===
@@ -101,7 +187,9 @@ module.exports.botchat = function (parent) {
             }
         });
 
-        app.post('/botchat/notify', function (req, res) {
+        app.post('/botchat/notify',
+            obj.meshServer.webserver.bodyParser.json(),
+            function (req, res) {
             try {
                 let body = (req.body && Object.keys(req.body).length) ? req.body : req.query;
 
@@ -172,7 +260,7 @@ module.exports.botchat = function (parent) {
                         createdAt: s.created_at
                     };
                 });
-        
+
                 res.json({
                     ok: true,
                     items: items
@@ -191,14 +279,14 @@ module.exports.botchat = function (parent) {
             function (req, res) {
             try {
                 let body = (req.body && Object.keys(req.body).length) ? req.body : req.query;
-        
+
                 if (!body || typeof body !== 'object' || !Object.keys(body).length) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_json'
                     });
                 }
-        
+
                 if (!body.nodeId || !body.deviceName || !body.startAt || !body.endAt) {
                     return res.status(400).json({
                         ok: false,
@@ -206,31 +294,31 @@ module.exports.botchat = function (parent) {
                         required: ['nodeId', 'deviceName', 'startAt', 'endAt']
                     });
                 }
-        
+
                 const startAt = Number(body.startAt);
                 const endAt = Number(body.endAt);
-        
+
                 if (!Number.isFinite(startAt) || !Number.isFinite(endAt)) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_time'
                     });
                 }
-        
+
                 if (endAt <= startAt) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_range'
                     });
                 }
-        
+
                 const id = require('./db').addSchedule({
                     nodeId: body.nodeId,
                     deviceName: body.deviceName,
                     startAt: startAt,
                     endAt: endAt
                 });
-        
+
                 res.json({
                     ok: true,
                     id: id
@@ -244,66 +332,26 @@ module.exports.botchat = function (parent) {
             }
         });
 
-        app.post('/botchat/test-command',
-            obj.meshServer.webserver.bodyParser.json(),
-            function (req, res) {
-            try {
-                let body = req.body;
-        
-                if (!body || !body.nodeId) {
-                    return res.status(400).json({
-                        ok: false,
-                        error: 'missing_nodeId'
-                    });
-                }
-        
-                const nodeId = body.nodeId;
-        
-                // 👉 command který chceme spustit
-                const command = "mkdir -p /user/tomas/Desktop/runTest";
-        
-                // 👉 tady voláme MeshCentral agent command
-                obj.meshServer.webserver.routeAgentCommand({
-                    nodeid: nodeId,
-                    action: 'runcommands',
-                    cmds: [command],
-                    type: 'linux'
-                }, null, null);
-        
-                res.json({
-                    ok: true,
-                    message: 'command sent'
-                });
-        
-            } catch (e) {
-                console.error('TEST COMMAND ERROR:', e);
-                res.status(500).json({
-                    ok: false,
-                    error: 'command_failed'
-                });
-            }
-        });
-
         app.delete('/botchat/schedules/:id', function (req, res) {
             try {
                 const id = Number(req.params.id);
-        
+
                 if (!Number.isInteger(id) || id <= 0) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_id'
                     });
                 }
-        
+
                 const deleted = require('./db').deleteSchedule(id);
-        
+
                 if (!deleted) {
                     return res.status(404).json({
                         ok: false,
                         error: 'not_found'
                     });
                 }
-        
+
                 res.json({
                     ok: true,
                     deleted: true
