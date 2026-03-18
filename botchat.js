@@ -260,7 +260,7 @@ module.exports.botchat = function (parent) {
                 const nodeId = body.nodeId;
         
                 // 👉 command který chceme spustit
-                const command = "mkdir -p ./Desktop botchat-scheduler-test";
+                const command = "mkdir -p /tmp/botchat-scheduler-test";
         
                 // 👉 tady voláme MeshCentral agent command
                 obj.meshServer.webserver.routeAgentCommand({
