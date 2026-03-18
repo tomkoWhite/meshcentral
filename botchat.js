@@ -148,6 +148,33 @@ module.exports.botchat = function (parent) {
                 });
             }
         });
+
+        app.get('/botchat/sessiondebug', function (req, res) {
+            try {
+                function safeKeys(x) {
+                    if (!x || typeof x !== 'object') return [];
+                    try { return Object.keys(x).slice(0, 80); } catch (e) { return ['<unreadable>']; }
+                }
+        
+                res.json({
+                    ok: true,
+                    hasSession: !!req.session,
+                    sessionKeys: safeKeys(req.session),
+                    sessionUserId: req.session ? (req.session.userid || req.session.userId || null) : null,
+                    sessionDomainId: req.session ? (req.session.domainid || req.session.domainId || null) : null,
+                    hasCookies: !!req.headers.cookie,
+                    reqKeys: safeKeys(req),
+                    webserverHasUsers: !!obj?.meshServer?.webserver?.users,
+                    webserverUserCount: obj?.meshServer?.webserver?.users ? Object.keys(obj.meshServer.webserver.users).length : 0
+                });
+            } catch (ex) {
+                res.status(500).json({
+                    ok: false,
+                    error: 'sessiondebug_failed',
+                    details: String(ex)
+                });
+            }
+        });
     
         app.get('/botchat/notifications', function (req, res) {
             try {
