@@ -606,14 +606,35 @@
                         '<div class="schedule-block-title">' + escapeHtml(item.deviceName) + '</div>' +
                         '<div class="schedule-block-time">' + escapeHtml(formatTimeHM(item.startAt) + ' - ' + formatTimeHM(item.endAt)) + '</div>';
 
-                    block.onclick = function () {
-                        alert(
-                            'Schedule ID: ' + item.id + '\n' +
+                    block.onclick = async function () {
+                        const ok = confirm(
+                            'Smazat tento schedule?\n\n' +
                             'Server: ' + item.deviceName + '\n' +
                             'Od: ' + new Date(item.startAt).toLocaleString('cs-CZ') + '\n' +
-                            'Do: ' + new Date(item.endAt).toLocaleString('cs-CZ') + '\n\n' +
-                            'Mazání přidáme v dalším kroku.'
+                            'Do: ' + new Date(item.endAt).toLocaleString('cs-CZ')
                         );
+                    
+                        if (!ok) return;
+                    
+                        try {
+                            const res = await fetch('/botchat/schedules/' + item.id, {
+                                method: 'DELETE',
+                                credentials: 'include'
+                            });
+                    
+                            const data = await res.json();
+                    
+                            if (!data.ok) {
+                                alert('Nepodařilo se schedule smazat.');
+                                console.error('deleteSchedule error response:', data);
+                                return;
+                            }
+                    
+                            await loadSchedules();
+                        } catch (e) {
+                            console.error('deleteSchedule error:', e);
+                            alert('Chyba při mazání schedule.');
+                        }
                     };
 
                     track.appendChild(block);
