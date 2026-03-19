@@ -36,19 +36,14 @@ module.exports.botchat = function (parent) {
                 }
 
                 const devices = docs.map(function (n) {
-                    const fullId = n._id || n.id || '';
-                
                     return {
-                        nodeId: fullId.replace(/^node\/\//, ''), // 👈 bez "node//"
-                        fullNodeId: fullId,                      // 👈 původní hodnota
+                        nodeId: n._id || n.id || '',
                         deviceName: n.name || n.rname || n.host || '(bez názvu)',
                         meshId: n.meshid || n.meshId || null
                     };
-                })
-                .filter(function (d) {
+                }).filter(function (d) {
                     return d.nodeId;
-                })
-                .sort(function (a, b) {
+                }).sort(function (a, b) {
                     return (a.deviceName || '').localeCompare(b.deviceName || '');
                 });
 
@@ -60,29 +55,90 @@ module.exports.botchat = function (parent) {
         }
     }
 
-    function createSchedulerNotification(kind, schedule) {
-        const now = Date.now();
+    function addEventLog(eventType, opts) {
         const db = require('./db');
+        const now = Date.now();
+        const data = opts || {};
 
-        let title = '';
-        let message = '';
+        return db.addEventLog({
+            eventType: eventType,
+            scheduleId: data.scheduleId || null,
+            notificationId: data.notificationId || null,
+            nodeId: data.nodeId || null,
+            deviceName: data.deviceName || null,
+            createdAt: data.createdAt || now,
+            resolvedAt: data.resolvedAt || null,
+            durationSeconds: data.durationSeconds,
+            resolutionType: data.resolutionType || null,
+            note: data.note || null
+        });
+    }
 
-        if (kind === 'start') {
-            title = 'Scheduler start';
-            message = 'Začal naplánovaný interval pro server ' + schedule.device_name + '.';
-        } else {
-            title = 'Scheduler end';
-            message = 'Skončil naplánovaný interval pro server ' + schedule.device_name + '.';
-        }
+    function createBotchatNotification(opts) {
+        const db = require('./db');
+        const now = Date.now();
+        const durationSeconds = Number(opts.durationSeconds || 300);
 
-        return db.addNotification({
+        const notificationId = db.addNotification({
+            nodeId: opts.nodeId,
+            deviceName: opts.deviceName,
+            title: opts.title,
+            message: opts.message,
+            createdAt: now,
+            expiresAt: now + (durationSeconds * 1000)
+        });
+
+        addEventLog('notification_created', {
+            scheduleId: opts.scheduleId || null,
+            notificationId: notificationId,
+            nodeId: opts.nodeId,
+            deviceName: opts.deviceName,
+            createdAt: now,
+            note: opts.note || opts.title
+        });
+
+        return notificationId;
+    }
+
+    function createSchedulerEndNotification(schedule) {
+        return createBotchatNotification({
+            scheduleId: schedule.id,
             nodeId: schedule.node_id,
             deviceName: schedule.device_name,
-            title: title,
-            message: message,
-            createdAt: now,
-            expiresAt: now + (5 * 60 * 1000)
+            title: 'Scheduler end',
+            message: 'Skončil naplánovaný interval pro server ' + schedule.device_name + '.',
+            durationSeconds: 300,
+            note: 'Scheduler end notification'
         });
+    }
+
+    function processExpiredNotifications() {
+        try {
+            const db = require('./db');
+            const now = Date.now();
+            const expiredItems = db.getExpiredActiveNotifications(now);
+
+            expiredItems.forEach(function (item) {
+                try {
+                    db.resolveNotificationEvent(item.id, 'expired', now);
+                    db.markNotificationExpired(item.id);
+
+                    addEventLog('notification_expired', {
+                        notificationId: item.id,
+                        nodeId: item.node_id,
+                        deviceName: item.device_name,
+                        createdAt: now,
+                        note: 'Notification expired without connect'
+                    });
+
+                    console.log('BOTCHAT notification expired:', item.id, item.device_name);
+                } catch (ex) {
+                    console.error('BOTCHAT notification expiry processing failed for', item.id, ex);
+                }
+            });
+        } catch (ex) {
+            console.error('BOTCHAT processExpiredNotifications error:', ex);
+        }
     }
 
     function processDueSchedules() {
@@ -93,7 +149,14 @@ module.exports.botchat = function (parent) {
             const dueStarts = db.getDueStartSchedules(now);
             dueStarts.forEach(function (schedule) {
                 try {
-                    //createSchedulerNotification('start', schedule);
+                    addEventLog('server_started_by_schedule', {
+                        scheduleId: schedule.id,
+                        nodeId: schedule.node_id,
+                        deviceName: schedule.device_name,
+                        createdAt: now,
+                        note: 'Schedule start reached'
+                    });
+
                     db.markScheduleStartTriggered(schedule.id);
                     console.log('BOTCHAT scheduler start triggered:', schedule.id, schedule.device_name);
                 } catch (ex) {
@@ -104,13 +167,24 @@ module.exports.botchat = function (parent) {
             const dueEnds = db.getDueEndSchedules(now);
             dueEnds.forEach(function (schedule) {
                 try {
-                    createSchedulerNotification('end', schedule);
+                    addEventLog('server_stopped_by_schedule', {
+                        scheduleId: schedule.id,
+                        nodeId: schedule.node_id,
+                        deviceName: schedule.device_name,
+                        createdAt: now,
+                        note: 'Schedule end reached'
+                    });
+
+                    createSchedulerEndNotification(schedule);
                     db.markScheduleEndTriggered(schedule.id);
+
                     console.log('BOTCHAT scheduler end triggered:', schedule.id, schedule.device_name);
                 } catch (ex) {
                     console.error('BOTCHAT end trigger failed for schedule', schedule.id, ex);
                 }
             });
+
+            processExpiredNotifications();
         } catch (ex) {
             console.error('BOTCHAT processDueSchedules error:', ex);
         }
@@ -163,7 +237,6 @@ module.exports.botchat = function (parent) {
             }
         });
 
-        // === NOTIFICATIONS ===
         app.get('/botchat/notifications', function (req, res) {
             try {
                 const items = require('./db').getActiveNotifications().map(function (n) {
@@ -194,24 +267,45 @@ module.exports.botchat = function (parent) {
 
         app.delete('/botchat/notifications/:id', function (req, res) {
             try {
+                const db = require('./db');
                 const id = Number(req.params.id);
-        
+
                 if (!Number.isInteger(id) || id <= 0) {
                     return res.status(400).json({
                         ok: false,
                         error: 'invalid_id'
                     });
                 }
-        
-                const deleted = require('./db').deleteNotification(id);
-        
+
+                const notification = db.getNotificationById(id);
+                if (!notification) {
+                    return res.status(404).json({
+                        ok: false,
+                        error: 'not_found'
+                    });
+                }
+
+                const now = Date.now();
+
+                db.resolveNotificationEvent(id, 'connect', now);
+
+                addEventLog('notification_opened', {
+                    notificationId: id,
+                    nodeId: notification.node_id,
+                    deviceName: notification.device_name,
+                    createdAt: now,
+                    note: 'Notification opened via Connect'
+                });
+
+                const deleted = db.deleteNotification(id);
+
                 if (!deleted) {
                     return res.status(404).json({
                         ok: false,
                         error: 'not_found'
                     });
                 }
-        
+
                 res.json({
                     ok: true,
                     deleted: true
@@ -258,16 +352,13 @@ module.exports.botchat = function (parent) {
                     });
                 }
 
-                const now = Date.now();
-                const durationSeconds = Number(body.duration || body.ttlSeconds || 300);
-
-                const id = require('./db').addNotification({
+                const id = createBotchatNotification({
                     nodeId: body.nodeId,
                     deviceName: body.deviceName,
                     title: body.title,
                     message: body.message,
-                    createdAt: now,
-                    expiresAt: now + (durationSeconds * 1000)
+                    durationSeconds: Number(body.duration || body.ttlSeconds || 300),
+                    note: 'Incoming notification'
                 });
 
                 res.json({
@@ -283,7 +374,6 @@ module.exports.botchat = function (parent) {
             }
         });
 
-        // === SCHEDULES ===
         app.get('/botchat/schedules', function (req, res) {
             try {
                 const items = require('./db').getSchedules().map(function (s) {
@@ -399,6 +489,24 @@ module.exports.botchat = function (parent) {
                 res.status(500).json({
                     ok: false,
                     error: 'schedule_delete_failed'
+                });
+            }
+        });
+
+        app.get('/botchat/logs', function (req, res) {
+            try {
+                const limit = Number(req.query.limit || 500);
+                const items = require('./db').getEventLogs(limit);
+
+                res.json({
+                    ok: true,
+                    items: items
+                });
+            } catch (e) {
+                console.error('LOGS GET ERROR:', e);
+                res.status(500).json({
+                    ok: false,
+                    error: 'logs_get_failed'
                 });
             }
         });
