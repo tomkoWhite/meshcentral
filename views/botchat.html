@@ -264,6 +264,40 @@
         font-size:12px;
         color:#6b7280;
     }
+    .notifications-layout{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+    align-items:start;
+    }
+    
+    .active-server-card{
+        background:#ffffff;
+        border-radius:10px;
+        padding:12px 16px;
+        margin-bottom:12px;
+        border:1px solid #e4e7eb;
+        box-shadow:0 2px 6px rgba(0,0,0,0.05);
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+    }
+    
+    .active-server-title{
+        font-weight:600;
+        font-size:14px;
+    }
+    
+    .active-server-time{
+        font-size:12px;
+        color:#52606d;
+    }
+    
+    .active-server-status{
+        font-size:12px;
+        font-weight:600;
+        color:#16a34a;
+    }
     </style>
 </head>
 <body>
@@ -276,7 +310,17 @@
         </div>
 
         <div id="notificationsTab">
-            <div id="notifications"></div>
+            <div class="notifications-layout">
+                <div>
+                    <div style="font-weight:600; margin-bottom:10px;">Notifikace</div>
+                    <div id="notifications"></div>
+                </div>
+        
+                <div>
+                    <div style="font-weight:600; margin-bottom:10px;">Aktivní servery</div>
+                    <div id="activeServers"></div>
+                </div>
+            </div>
         </div>
 
         <div id="schedulerTab" style="display:none;">
@@ -507,6 +551,46 @@
             }
         }
 
+        function getActiveServers() {
+            const now = Date.now();
+        
+            return schedules.filter(function (item) {
+                return item.startAt <= now && item.endAt >= now;
+            });
+        }
+        
+        function renderActiveServers() {
+            const root = document.getElementById('activeServers');
+            root.innerHTML = '';
+        
+            const active = getActiveServers();
+        
+            if (!active.length) {
+                root.innerHTML = '<div class="empty">Žádné aktivní servery.</div>';
+                return;
+            }
+        
+            active.forEach(function (item) {
+                const card = document.createElement('div');
+                card.className = 'active-server-card';
+        
+                card.innerHTML =
+                    '<div class="active-server-title">🖥 ' + escapeHtml(item.deviceName) + '</div>' +
+                    '<div class="active-server-time">' +
+                        'Od: ' + formatTimeHM(item.startAt) +
+                        ' | Do: ' + formatTimeHM(item.endAt) +
+                    '</div>' +
+                    '<div class="active-server-status">Aktivní</div>' +
+                    '<button class="btn" style="margin-top:6px;">Open desktop</button>';
+        
+                card.querySelector('button').onclick = function () {
+                    openDesktop(item.nodeId);
+                };
+        
+                root.appendChild(card);
+            });
+        }
+
         function setDefaultDates() {
             const today = toDateInputValue(new Date());
             document.getElementById('scheduleDate').value = today;
@@ -692,6 +776,7 @@
                 });
 
                 renderPlanner();
+                renderActiveServers();
             } catch (e) {
                 console.error('loadSchedules error:', e);
             }
@@ -761,7 +846,10 @@
             }
         }
 
-        setInterval(renderNotifications, 1000);
+        setInterval(function () {
+            renderNotifications();
+            renderActiveServers(); // 👈 přidat
+        }, 1000);
         setInterval(loadNotifications, 5000);
 
         renderPlannerHours();
