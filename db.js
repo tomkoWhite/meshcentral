@@ -38,6 +38,22 @@ CREATE TABLE IF NOT EXISTS schedules (
 )
 `);
 
+db.exec(`
+CREATE TABLE IF NOT EXISTS event_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type TEXT NOT NULL,
+    schedule_id INTEGER,
+    notification_id INTEGER,
+    node_id TEXT,
+    device_name TEXT,
+    created_at INTEGER NOT NULL,
+    resolved_at INTEGER,
+    duration_seconds INTEGER,
+    resolution_type TEXT,
+    note TEXT
+)
+`);
+
 function addNotification(data) {
     const stmt = db.prepare(`
         INSERT INTO notifications (
@@ -57,6 +73,23 @@ function addNotification(data) {
     return info.lastInsertRowid;
 }
 
+function getNotificationById(id) {
+    return db.prepare(`
+        SELECT id, node_id, device_name, title, message, created_at, expires_at, status
+        FROM notifications
+        WHERE id = ?
+    `).get(id);
+}
+
+function getActiveNotifications() {
+    return db.prepare(`
+        SELECT id, node_id, device_name, title, message, created_at, expires_at, status
+        FROM notifications
+        WHERE status = 'active'
+        ORDER BY created_at DESC
+    `).all();
+}
+
 function deleteNotification(id) {
     const stmt = db.prepare(`
         DELETE FROM notifications
@@ -67,13 +100,24 @@ function deleteNotification(id) {
     return info.changes > 0;
 }
 
-function getActiveNotifications() {
+function markNotificationExpired(id) {
+    const stmt = db.prepare(`
+        UPDATE notifications
+        SET status = 'expired'
+        WHERE id = ?
+    `);
+
+    const info = stmt.run(id);
+    return info.changes > 0;
+}
+
+function getExpiredActiveNotifications(now) {
     return db.prepare(`
         SELECT id, node_id, device_name, title, message, created_at, expires_at, status
         FROM notifications
-        WHERE status = 'active'
-        ORDER BY created_at DESC
-    `).all();
+        WHERE status = 'active' AND expires_at <= ?
+        ORDER BY expires_at ASC
+    `).all(now);
 }
 
 function addSchedule(data) {
@@ -148,9 +192,94 @@ function markScheduleEndTriggered(id) {
     stmt.run(id);
 }
 
+function addEventLog(data) {
+    const stmt = db.prepare(`
+        INSERT INTO event_logs (
+            event_type,
+            schedule_id,
+            notification_id,
+            node_id,
+            device_name,
+            created_at,
+            resolved_at,
+            duration_seconds,
+            resolution_type,
+            note
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const info = stmt.run(
+        data.eventType,
+        data.scheduleId || null,
+        data.notificationId || null,
+        data.nodeId || null,
+        data.deviceName || null,
+        data.createdAt,
+        data.resolvedAt || null,
+        Number.isFinite(data.durationSeconds) ? data.durationSeconds : null,
+        data.resolutionType || null,
+        data.note || null
+    );
+
+    return info.lastInsertRowid;
+}
+
+function getEventLogs(limit) {
+    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 500;
+
+    return db.prepare(`
+        SELECT
+            id,
+            event_type,
+            schedule_id,
+            notification_id,
+            node_id,
+            device_name,
+            created_at,
+            resolved_at,
+            duration_seconds,
+            resolution_type,
+            note
+        FROM event_logs
+        ORDER BY created_at DESC, id DESC
+        LIMIT ?
+    `).all(safeLimit);
+}
+
+function resolveNotificationEvent(notificationId, resolutionType, resolvedAt) {
+    const logRow = db.prepare(`
+        SELECT id, created_at
+        FROM event_logs
+        WHERE event_type = 'notification_created'
+          AND notification_id = ?
+          AND resolved_at IS NULL
+        ORDER BY id DESC
+        LIMIT 1
+    `).get(notificationId);
+
+    if (!logRow) return false;
+
+    const durationSeconds = Math.max(0, Math.floor((resolvedAt - logRow.created_at) / 1000));
+
+    const info = db.prepare(`
+        UPDATE event_logs
+        SET resolved_at = ?,
+            duration_seconds = ?,
+            resolution_type = ?
+        WHERE id = ?
+    `).run(resolvedAt, durationSeconds, resolutionType, logRow.id);
+
+    return info.changes > 0;
+}
+
 module.exports = {
     addNotification,
+    getNotificationById,
     getActiveNotifications,
+    deleteNotification,
+    markNotificationExpired,
+    getExpiredActiveNotifications,
+
     addSchedule,
     getSchedules,
     deleteSchedule,
@@ -158,5 +287,8 @@ module.exports = {
     getDueEndSchedules,
     markScheduleStartTriggered,
     markScheduleEndTriggered,
-    deleteNotification
+
+    addEventLog,
+    getEventLogs,
+    resolveNotificationEvent
 };
