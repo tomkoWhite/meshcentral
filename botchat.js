@@ -192,6 +192,39 @@ module.exports.botchat = function (parent) {
             }
         });
 
+        app.delete('/botchat/notifications/:id', function (req, res) {
+            try {
+                const id = Number(req.params.id);
+        
+                if (!Number.isInteger(id) || id <= 0) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: 'invalid_id'
+                    });
+                }
+        
+                const deleted = require('./db').deleteNotification(id);
+        
+                if (!deleted) {
+                    return res.status(404).json({
+                        ok: false,
+                        error: 'not_found'
+                    });
+                }
+        
+                res.json({
+                    ok: true,
+                    deleted: true
+                });
+            } catch (e) {
+                console.error('NOTIFICATION DELETE ERROR:', e);
+                res.status(500).json({
+                    ok: false,
+                    error: 'notification_delete_failed'
+                });
+            }
+        });
+
         app.post('/botchat/notify',
             obj.meshServer.webserver.bodyParser.json(),
             function (req, res) {
