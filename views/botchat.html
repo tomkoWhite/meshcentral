@@ -392,7 +392,31 @@
                 .replace(/'/g,'&#039;');
         }
 
-        function openDesktop(nodeId) {
+        async function openDesktop(nodeId, notificationId) {
+            try {
+                if (notificationId) {
+                    const res = await fetch('/botchat/notifications/' + notificationId, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+        
+                    const data = await res.json();
+        
+                    if (!data.ok) {
+                        console.error('delete notification failed:', data);
+                    } else {
+                        // odstranění z UI
+                        botchatItems = botchatItems.filter(function (x) {
+                            return x.id !== notificationId;
+                        });
+                        renderNotifications();
+                    }
+                }
+            } catch (e) {
+                console.error('delete notification error:', e);
+            }
+        
+            // 👉 vždy otevře desktop (i když delete failne)
             window.location.href = '/login?viewmode=11&hide=31&nobotchat=1&gotonode=' + nodeId;
         }
 
@@ -423,7 +447,7 @@
                     '</div>' +
                     '<div class="message">' + escapeHtml(item.message) + '</div>';
 
-                card.querySelector('button').onclick = () => openDesktop(item.nodeId);
+                card.querySelector('button').onclick = () => openDesktop(item.nodeId, item.id);
                 root.appendChild(card);
             });
         }
