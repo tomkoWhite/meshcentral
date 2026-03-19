@@ -57,6 +57,16 @@ function addNotification(data) {
     return info.lastInsertRowid;
 }
 
+function deleteNotification(id) {
+    const stmt = db.prepare(`
+        DELETE FROM notifications
+        WHERE id = ?
+    `);
+
+    const info = stmt.run(id);
+    return info.changes > 0;
+}
+
 function getActiveNotifications() {
     return db.prepare(`
         SELECT id, node_id, device_name, title, message, created_at, expires_at, status
@@ -147,5 +157,6 @@ module.exports = {
     getDueStartSchedules,
     getDueEndSchedules,
     markScheduleStartTriggered,
-    markScheduleEndTriggered
+    markScheduleEndTriggered,
+    deleteNotification
 };
