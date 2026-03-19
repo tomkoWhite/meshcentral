@@ -264,11 +264,12 @@
         font-size:12px;
         color:#6b7280;
     }
+
     .notifications-layout{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:20px;
-    align-items:start;
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:20px;
+        align-items:start;
     }
     
     .active-server-card{
@@ -298,6 +299,36 @@
         font-weight:600;
         color:#16a34a;
     }
+
+    .log-row{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:8px 10px;
+        border-bottom:1px solid #e5e7eb;
+        font-size:13px;
+    }
+
+    .log-type{
+        font-weight:600;
+    }
+
+    .log-time{
+        color:#64748b;
+        font-size:12px;
+        text-align:right;
+    }
+
+    .log-duration{
+        font-weight:600;
+        color:#0b4a88;
+        text-align:right;
+    }
+
+    .log-green{ color:#16a34a; }
+    .log-red{ color:#dc2626; }
+    .log-blue{ color:#2563eb; }
+    .log-gray{ color:#64748b; }
     </style>
 </head>
 <body>
@@ -307,6 +338,7 @@
         <div class="tabs">
             <button class="btn" onclick="showTab('notificationsTab')">Notifikace</button>
             <button class="btn" onclick="showTab('schedulerTab')">Scheduler</button>
+            <button class="btn" onclick="showTab('logsTab')">Logs</button>
         </div>
 
         <div id="notificationsTab">
@@ -375,6 +407,13 @@
                 <div id="plannerBody"></div>
             </div>
         </div>
+
+        <div id="logsTab" style="display:none;">
+            <div class="card">
+                <div style="font-weight:600; margin-bottom:10px;">Logy</div>
+                <div id="logs"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -383,10 +422,12 @@
         let notificationsInitialized = false;
         let devices = [];
         let schedules = [];
+        let logs = [];
 
         function showTab(tabId) {
             document.getElementById('notificationsTab').style.display = 'none';
             document.getElementById('schedulerTab').style.display = 'none';
+            document.getElementById('logsTab').style.display = 'none';
             document.getElementById(tabId).style.display = 'block';
         }
 
@@ -449,7 +490,6 @@
                     if (!data.ok) {
                         console.error('delete notification failed:', data);
                     } else {
-                        // odstranění z UI
                         botchatItems = botchatItems.filter(function (x) {
                             return x.id !== notificationId;
                         });
@@ -460,7 +500,6 @@
                 console.error('delete notification error:', e);
             }
         
-            // 👉 vždy otevře desktop (i když delete failne)
             window.location.href = '/login?viewmode=11&hide=31&nobotchat=1&gotonode=' + nodeId;
         }
 
@@ -846,17 +885,85 @@
             }
         }
 
+        async function loadLogs() {
+            try {
+                const res = await fetch('/botchat/logs?limit=200', { credentials: 'include' });
+                const data = await res.json();
+
+                if (!data.ok) return;
+
+                logs = data.items || [];
+                renderLogs();
+            } catch (e) {
+                console.error('loadLogs error:', e);
+            }
+        }
+
+        function formatDateTime(ts) {
+            const d = new Date(ts);
+            return d.toLocaleString('cs-CZ');
+        }
+
+        function formatDuration(sec) {
+            if (!sec && sec !== 0) return '-';
+
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+
+            return m + ':' + String(s).padStart(2, '0');
+        }
+
+        function getLogColor(type) {
+            if (type.includes('started')) return 'log-green';
+            if (type.includes('stopped')) return 'log-red';
+            if (type.includes('notification_opened')) return 'log-blue';
+            if (type.includes('expired')) return 'log-gray';
+            return '';
+        }
+
+        function renderLogs() {
+            const root = document.getElementById('logs');
+            root.innerHTML = '';
+
+            if (!logs.length) {
+                root.innerHTML = '<div class="empty">Žádné logy.</div>';
+                return;
+            }
+
+            logs.forEach(function (item) {
+                const row = document.createElement('div');
+                row.className = 'log-row';
+
+                const typeColor = getLogColor(item.event_type);
+
+                row.innerHTML =
+                    '<div>' +
+                        '<div class="log-type ' + typeColor + '">' + escapeHtml(item.event_type) + '</div>' +
+                        '<div>' + escapeHtml(item.device_name || '') + '</div>' +
+                    '</div>' +
+                    '<div>' +
+                        '<div class="log-time">' + escapeHtml(formatDateTime(item.created_at)) + '</div>' +
+                        '<div class="log-duration">' + escapeHtml(formatDuration(item.duration_seconds)) + '</div>' +
+                    '</div>';
+
+                root.appendChild(row);
+            });
+        }
+
         setInterval(function () {
             renderNotifications();
-            renderActiveServers(); // 👈 přidat
+            renderActiveServers();
         }, 1000);
+
         setInterval(loadNotifications, 5000);
+        setInterval(loadLogs, 5000);
 
         renderPlannerHours();
         setDefaultDates();
         loadNotifications();
         loadDevices();
         loadSchedules();
+        loadLogs();
     </script>
 </body>
 </html>
