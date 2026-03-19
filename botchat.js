@@ -289,14 +289,6 @@ module.exports.botchat = function (parent) {
 
                 db.resolveNotificationEvent(id, 'connect', now);
 
-                addEventLog('notification_opened', {
-                    notificationId: id,
-                    nodeId: notification.node_id,
-                    deviceName: notification.device_name,
-                    createdAt: now,
-                    note: 'Notification opened via Connect'
-                });
-
                 const deleted = db.deleteNotification(id);
 
                 if (!deleted) {
