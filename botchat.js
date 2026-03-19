@@ -175,7 +175,7 @@ module.exports.botchat = function (parent) {
                         note: 'Schedule end reached'
                     });
 
-                    createSchedulerEndNotification(schedule);
+                    //createSchedulerEndNotification(schedule);
                     db.markScheduleEndTriggered(schedule.id);
 
                     console.log('BOTCHAT scheduler end triggered:', schedule.id, schedule.device_name);
