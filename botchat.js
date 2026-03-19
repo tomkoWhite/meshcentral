@@ -93,7 +93,7 @@ module.exports.botchat = function (parent) {
             const dueStarts = db.getDueStartSchedules(now);
             dueStarts.forEach(function (schedule) {
                 try {
-                    createSchedulerNotification('start', schedule);
+                    //createSchedulerNotification('start', schedule);
                     db.markScheduleStartTriggered(schedule.id);
                     console.log('BOTCHAT scheduler start triggered:', schedule.id, schedule.device_name);
                 } catch (ex) {
