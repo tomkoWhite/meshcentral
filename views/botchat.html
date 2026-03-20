@@ -530,6 +530,7 @@
                     '</div>' +
                     '<div class="message">' + escapeHtml(item.message) + '</div>';
 
+                alert("nodeId = " + item.nodeId + " id = " + item.id)
                 card.querySelector('button').onclick = () => openDesktop(item.nodeId, item.id);
                 root.appendChild(card);
             });
