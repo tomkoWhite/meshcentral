@@ -621,10 +621,10 @@
                     '</div>' +
                     '<div class="active-server-status">Aktivní</div>' +
                     '<button class="btn" style="margin-top:6px;">Open desktop</button>';
-        
+
+                const cleanNodeId = item.nodeId.replace('node//', '');
                 card.querySelector('button').onclick = function () {
-                    alert(item.nodeId)
-                    openDesktop(item.nodeId);
+                    openDesktop(cleanNodeId);
                 };
         
                 root.appendChild(card);
