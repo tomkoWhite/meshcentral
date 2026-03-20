@@ -530,7 +530,6 @@
                     '</div>' +
                     '<div class="message">' + escapeHtml(item.message) + '</div>';
 
-                alert("nodeId = " + item.nodeId + " id = " + item.id)
                 card.querySelector('button').onclick = () => openDesktop(item.nodeId, item.id);
                 root.appendChild(card);
             });
@@ -624,6 +623,7 @@
                     '<button class="btn" style="margin-top:6px;">Open desktop</button>';
         
                 card.querySelector('button').onclick = function () {
+                    alert(item.nodeId)
                     openDesktop(item.nodeId);
                 };
         
