@@ -62,6 +62,40 @@ module.exports.botchat = function (parent) {
         }
     }
 
+    function getDeviceTagsByNodeId(obj, nodeId, callback) {
+        try {
+            const db = obj?.meshServer?.db;
+            if (!db || typeof db.GetAllType !== 'function') {
+                console.error('BOTCHAT tags: db.GetAllType not available');
+                return callback([]);
+            }
+    
+            db.GetAllType('node', function (err, docs) {
+                if (err) {
+                    console.error('BOTCHAT db.GetAllType(node) error:', err);
+                    return callback([]);
+                }
+    
+                if (!Array.isArray(docs)) {
+                    console.error('BOTCHAT db.GetAllType(node): result is not array');
+                    return callback([]);
+                }
+    
+                const found = docs.find(function (n) {
+                    const id = n._id || n.id || '';
+                    return id === nodeId;
+                });
+    
+                if (!found) return callback([]);
+    
+                callback(Array.isArray(found.tags) ? found.tags : []);
+            });
+        } catch (ex) {
+            console.error('BOTCHAT getDeviceTagsByNodeId exception:', ex);
+            callback([]);
+        }
+    }
+
     function addEventLog(eventType, opts) {
         const db = require('./db');
         const now = Date.now();
@@ -183,8 +217,10 @@ module.exports.botchat = function (parent) {
                         note: 'Schedule start reached'
                     });
 
-                    console.log(schedule.id)
-                    console.log(schedule.node_id)
+                    getDeviceTagsByNodeId(obj, schedule.node_id, function (tags) {
+                        console.log('Schedule node_id:', schedule.node_id);
+                        console.log('Tags for node:', tags);
+                    });
                     //callApi('start')
 
                     db.markScheduleStartTriggered(schedule.id);
