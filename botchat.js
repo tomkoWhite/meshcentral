@@ -24,30 +24,36 @@ module.exports.botchat = function (parent) {
                 console.error('BOTCHAT devices: db.GetAllType not available');
                 return callback([]);
             }
-
+    
             db.GetAllType('node', function (err, docs) {
                 if (err) {
                     console.error('BOTCHAT db.GetAllType(node) error:', err);
                     return callback([]);
                 }
-
+    
                 if (!Array.isArray(docs)) {
                     console.error('BOTCHAT db.GetAllType(node): result is not array');
                     return callback([]);
                 }
-
+    
                 const devices = docs.map(function (n) {
                     return {
                         nodeId: n._id || n.id || '',
                         deviceName: n.name || n.rname || n.host || '(bez názvu)',
-                        meshId: n.meshid || n.meshId || null
+                        meshId: n.meshid || n.meshId || null,
+    
+                        // testovací výpis možných polí se štítky
+                        tags: n.tags || [],
+                        tag: n.tag || null,
+                        labels: n.labels || [],
+                        groups: n.groups || []
                     };
                 }).filter(function (d) {
                     return d.nodeId;
                 }).sort(function (a, b) {
                     return (a.deviceName || '').localeCompare(b.deviceName || '');
                 });
-
+    
                 callback(devices);
             });
         } catch (ex) {
@@ -226,6 +232,15 @@ module.exports.botchat = function (parent) {
         console.log('BOTCHAT scheduler loop started');
     }
 
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     obj.hook_setupHttpHandlers = function (args) {
 
         const app =
@@ -286,6 +301,48 @@ module.exports.botchat = function (parent) {
                     ok: false,
                     error: 'db_read_failed'
                 });
+            }
+        });
+
+        app.get('/stitky', function (req, res) {
+            try {
+                getMeshCentralDevices(obj, function (devices) {
+                    let html = `
+                        <!DOCTYPE html>
+                        <html lang="cs">
+                        <head>
+                            <meta charset="utf-8">
+                            <title>Štítky</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 30px; background: #f5f7fb; }
+                                .card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+                                .name { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+                                .line { font-size: 13px; color: #333; margin: 4px 0; }
+                                code { background: #eef2f7; padding: 2px 6px; border-radius: 6px; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>Štítky zařízení</h1>
+                    `;
+        
+                    devices.forEach(function (d) {
+                        html += `
+                            <div class="card">
+                                <div class="name">${escapeHtml(d.deviceName)}</div>
+                                <div class="line"><b>nodeId:</b> <code>${escapeHtml(d.nodeId)}</code></div>
+                                <div class="line"><b>tags:</b> <code>${escapeHtml(JSON.stringify(d.tags))}</code></div>
+                                <div class="line"><b>tag:</b> <code>${escapeHtml(JSON.stringify(d.tag))}</code></div>
+                                <div class="line"><b>labels:</b> <code>${escapeHtml(JSON.stringify(d.labels))}</code></div>
+                                <div class="line"><b>groups:</b> <code>${escapeHtml(JSON.stringify(d.groups))}</code></div>
+                            </div>
+                        `;
+                    });
+        
+                    html += `</body></html>`;
+                    res.send(html);
+                });
+            } catch (ex) {
+                res.status(500).send(String(ex));
             }
         });
 
