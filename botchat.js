@@ -183,7 +183,9 @@ module.exports.botchat = function (parent) {
                         note: 'Schedule start reached'
                     });
 
-                    callApi('start')
+                    alert(schedule.id)
+                    alert(schedule.node_id)
+                    //callApi('start')
 
                     db.markScheduleStartTriggered(schedule.id);
                     console.log('BOTCHAT scheduler start triggered:', schedule.id, schedule.device_name);
