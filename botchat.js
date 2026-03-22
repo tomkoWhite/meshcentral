@@ -182,13 +182,13 @@ module.exports.botchat = function (parent) {
         }
     }
 
-    function callApi(action) {
+    function callApi(action, port) {
         let url = '';
     
         if (action === 'start') {
-            url = 'http://localhost:6000/run';
+            url = 'http://localhost:' + port + '/run';
         } else if (action === 'stop') {
-            url = 'http://localhost:6000/stop';
+            url = 'http://localhost:' + port + '/stop';
         } else {
             console.error('Neznámá akce:', action);
             return;
@@ -218,10 +218,8 @@ module.exports.botchat = function (parent) {
                     });
 
                     getDeviceTagsByNodeId(obj, schedule.node_id, function (tags) {
-                        console.log('Schedule node_id:', schedule.node_id);
-                        console.log('Tags for node:', tags);
+                        callApi('start', tags[0])
                     });
-                    //callApi('start')
 
                     db.markScheduleStartTriggered(schedule.id);
                     console.log('BOTCHAT scheduler start triggered:', schedule.id, schedule.device_name);
@@ -241,7 +239,9 @@ module.exports.botchat = function (parent) {
                         note: 'Schedule end reached'
                     });
 
-                    callApi('stop')
+                    getDeviceTagsByNodeId(obj, schedule.node_id, function (tags) {
+                        callApi('stop', tags[0])
+                    });
 
                     //createSchedulerEndNotification(schedule);
                     db.markScheduleEndTriggered(schedule.id);
