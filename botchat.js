@@ -2,6 +2,7 @@
 
 const path = require('path');
 const BOTCHAT_API_KEY = 'NZQGkV2di7NzeB8V6FX98PJENvZkClkpAnP5JuUo5rgcMWudmXmddcUqvD9pU9ei';
+const http = require('http');
 
 module.exports.botchat = function (parent) {
     var obj = {};
@@ -141,6 +142,25 @@ module.exports.botchat = function (parent) {
         }
     }
 
+    function callApi(action) {
+        let url = '';
+    
+        if (action === 'start') {
+            url = 'http://localhost:6000/run';
+        } else if (action === 'stop') {
+            url = 'http://localhost:6000/stop';
+        } else {
+            console.error('Neznámá akce:', action);
+            return;
+        }
+    
+        http.get(url, (res) => {
+            console.log(`API ${action} status:`, res.statusCode);
+        }).on('error', (err) => {
+            console.error(`API ${action} failed:`, err.message);
+        });
+    }
+
     function processDueSchedules() {
         try {
             const db = require('./db');
@@ -156,6 +176,8 @@ module.exports.botchat = function (parent) {
                         createdAt: now,
                         note: 'Schedule start reached'
                     });
+
+                    callApi('start')
 
                     db.markScheduleStartTriggered(schedule.id);
                     console.log('BOTCHAT scheduler start triggered:', schedule.id, schedule.device_name);
@@ -174,6 +196,8 @@ module.exports.botchat = function (parent) {
                         createdAt: now,
                         note: 'Schedule end reached'
                     });
+
+                    callApi('stop')
 
                     //createSchedulerEndNotification(schedule);
                     db.markScheduleEndTriggered(schedule.id);
